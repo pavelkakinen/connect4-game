@@ -27,12 +27,12 @@ public class Menu
                 MenuItems["x"] = new MenuItem() {Key = "x", Value = "Exit"};
                 break;
             case EMenuLevel.First:
-                MenuItems["b"] = new MenuItem() {Key = "b", Value = "Back To Previous Menu"};
+                MenuItems["b"] = new MenuItem() {Key = "b", Value = "Back"};
                 MenuItems["x"] = new MenuItem() {Key = "x", Value = "Exit"};
                 break;
             case EMenuLevel.Deep:
                 MenuItems["m"] = new MenuItem() {Key = "m", Value = "Return To Main Menu"};
-                MenuItems["b"] = new MenuItem() {Key = "b", Value = "Back To Previous Menu"};
+                MenuItems["b"] = new MenuItem() {Key = "b", Value = "Back"};
                 MenuItems["x"] = new MenuItem() {Key = "x", Value = "Exit"};
                 break;
         }
@@ -47,7 +47,6 @@ public class Menu
         var userChoice = "";
         do
         {
-            
             DisplayMenu();
             Console.Write("Please make a selection: ");
             
@@ -83,16 +82,12 @@ public class Menu
             {
                 Console.WriteLine("Invalid input. Please try again.");
             }
-
         } while (menuRunning);
         
         return userChoice;
-
-
     }
         private void DisplayMenu()
         {
-            
             Console.WriteLine(Title);
             Console.WriteLine("-----------------------------");
             foreach (var item in MenuItems.Values)
@@ -100,5 +95,4 @@ public class Menu
                 Console.WriteLine(item);
             }
         }
-
 }

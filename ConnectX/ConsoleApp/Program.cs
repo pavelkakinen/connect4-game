@@ -2,45 +2,58 @@
 using ConsoleApp;
 using MenuSystem;
 
-Console.WriteLine("Hello, ConnectFour!");
+Console.OutputEncoding = System.Text.Encoding.UTF8;
+
+var mainMenu = new Menu("=== Connect Four ===", EMenuLevel.Root);
+
+var predefinedConfigMenu = new Menu("=== Predefined Config ===", EMenuLevel.First);
 
 
-var mainMenu0 = new Menu("Connect Four", EMenuLevel.Root);
-mainMenu0.AddMenuItem("a", "New Game", () =>
+
+mainMenu.AddMenuItem("1", "Play Game", () =>
 {
-    var controller = new GameController(new GameConfiguration());
-    controller.GameLoop();
-    return "a";
+    predefinedConfigMenu.Run();
+    return "p";
 });
 
-
-
-var configGameMenu1 = new Menu("Config Game", EMenuLevel.First);
-configGameMenu1.AddMenuItem("2", "Set Own Configurations", () =>
+mainMenu.AddMenuItem("2", "Set Own Configurations", () =>
 {
     var config = GameController.SetGameConfiguration();
     var controller = new GameController(config);
-    controller.GameLoop();
-    return "a";
+    return controller.GameLoop();
 });
 
 
-var chooseClassicConfMenu2 = new Menu("Choose Any Classic Configuration", EMenuLevel.Deep);
 
-var menu3 = new Menu("Menu 3", EMenuLevel.Deep);
-menu3.AddMenuItem("a", "Level3 - Option A", () => { Console.WriteLine("Level3 - Option A  was called");
-    return "a";
+predefinedConfigMenu.AddMenuItem("1", "Classic Connect 4 (7x6, Win: 4)", () =>
+{
+    var config = GameConfiguration.Classic();
+    var controller = new GameController(config);
+    return controller.GameLoop();
+});
+
+predefinedConfigMenu.AddMenuItem("2", "Connect 3 (5x4, Win: 3)", () =>
+{
+    var config = GameConfiguration.Connect3();
+    var controller = new GameController(config);
+    return controller.GameLoop();
+});
+
+predefinedConfigMenu.AddMenuItem("3", "Connect 5 (9x7, Win: 5)", () =>
+{
+    var config = GameConfiguration.Connect5();
+    var controller = new GameController(config);
+    return controller.GameLoop();
+});
+
+predefinedConfigMenu.AddMenuItem("4", "Cylinder Connect 4 (7x6, Win: 4)", () =>
+{
+    var config = GameConfiguration.Connect4Cylinder();
+    var controller = new GameController(config);
+    return controller.GameLoop();
 });
 
 
-mainMenu0.AddMenuItem("1", "Config Game",  configGameMenu1.Run);
-
-configGameMenu1.AddMenuItem("1", "Choose classic configurations", chooseClassicConfMenu2.Run);
-
-chooseClassicConfMenu2.AddMenuItem("1", "Classic connect 4", () => { Console.WriteLine("Connect 4 was called"); return "a";});
-chooseClassicConfMenu2.AddMenuItem("2", "Connect 5", () => { Console.WriteLine("Connect 5 was called"); return "a";});
-chooseClassicConfMenu2.AddMenuItem("3", "Connect 3", () => { Console.WriteLine("Connect 3 was called"); return "a";});
-chooseClassicConfMenu2.AddMenuItem("4", "Connect 4 Cylinder", () => { Console.WriteLine("Connect 4 cylinder was called"); return "a";});
 
 
-mainMenu0.Run();
+mainMenu.Run();
