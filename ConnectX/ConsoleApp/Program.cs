@@ -1,22 +1,31 @@
-﻿using MenuSystem;
+﻿using BLL;
+using ConsoleApp;
+using MenuSystem;
 
 Console.WriteLine("Hello, ConnectFour!");
 
 
-var menu = new Menu("Connect Four", EMenuLevel.Root);
-menu.AddMenuItem("a", "Level0 - Option A", () => { Console.WriteLine("Level0 - Option A was called");
+var mainMenu0 = new Menu("Connect Four", EMenuLevel.Root);
+mainMenu0.AddMenuItem("a", "New Game", () =>
+{
+    var controller = new GameController(new GameConfiguration());
+    controller.GameLoop();
     return "a";
 });
 
-var menu1 = new Menu("Menu 1", EMenuLevel.First);
-menu1.AddMenuItem("a", "Level1 - Option A", () => { Console.WriteLine("Level1 - Option A was called");
+
+
+var configGameMenu1 = new Menu("Config Game", EMenuLevel.First);
+configGameMenu1.AddMenuItem("2", "Set Own Configurations", () =>
+{
+    var config = GameController.SetGameConfiguration();
+    var controller = new GameController(config);
+    controller.GameLoop();
     return "a";
 });
 
-var menu2 = new Menu("Menu 2", EMenuLevel.Deep);
-menu2.AddMenuItem("a", "Level2 - Option A", () => { Console.WriteLine("Level2 - Option A  was called");
-    return "a";
-});
+
+var chooseClassicConfMenu2 = new Menu("Choose Any Classic Configuration", EMenuLevel.Deep);
 
 var menu3 = new Menu("Menu 3", EMenuLevel.Deep);
 menu3.AddMenuItem("a", "Level3 - Option A", () => { Console.WriteLine("Level3 - Option A  was called");
@@ -24,11 +33,14 @@ menu3.AddMenuItem("a", "Level3 - Option A", () => { Console.WriteLine("Level3 - 
 });
 
 
-menu.AddMenuItem("1", "Level0 - Go to Level1", menu1.Run);
+mainMenu0.AddMenuItem("1", "Config Game",  configGameMenu1.Run);
 
-menu1.AddMenuItem("2", "Level1 - Go to Level2", menu2.Run);
+configGameMenu1.AddMenuItem("1", "Choose classic configurations", chooseClassicConfMenu2.Run);
 
-menu2.AddMenuItem("3", "Level2 - Go to Level3", menu3.Run);
+chooseClassicConfMenu2.AddMenuItem("1", "Classic connect 4", () => { Console.WriteLine("Connect 4 was called"); return "a";});
+chooseClassicConfMenu2.AddMenuItem("2", "Connect 5", () => { Console.WriteLine("Connect 5 was called"); return "a";});
+chooseClassicConfMenu2.AddMenuItem("3", "Connect 3", () => { Console.WriteLine("Connect 3 was called"); return "a";});
+chooseClassicConfMenu2.AddMenuItem("4", "Connect 4 Cylinder", () => { Console.WriteLine("Connect 4 cylinder was called"); return "a";});
 
 
-menu.Run();
+mainMenu0.Run();
