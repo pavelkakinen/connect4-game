@@ -55,7 +55,7 @@ public class GameBrain
         {
             if (GameBoard[row, column] == ECellState.Empty)
             {
-                GameBoard[row, column] = NextMoveByX ? ECellState.X : ECellState.O;
+                GameBoard[row, column] = NextMoveByX ? ECellState.Red : ECellState.Blue;
                 return row;
             }
         }

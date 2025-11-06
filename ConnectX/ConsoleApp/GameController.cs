@@ -182,12 +182,12 @@ public class GameController
                         if (row.HasValue)
                         {
                             // Piece that was just placed
-                            var piece = GameBrain.IsNextPlayerX() ? ECellState.X : ECellState.O;
+                            var piece = GameBrain.IsNextPlayerX() ? ECellState.Red : ECellState.Blue;
 
                             // Check for win
                             if (GameBrain.CheckWin(row.Value, column))
                             {
-                                var winner = piece == ECellState.X ? ECellState.XWin : ECellState.OWin;
+                                var winner = piece == ECellState.Red ? ECellState.RedWin : ECellState.BlueWin;
                                 GameBrain.SetGameOver(winner);
                             }
                             // Check for draw

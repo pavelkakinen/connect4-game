@@ -6,6 +6,7 @@ public static class Ui
 {
     public static void DrawBoard(ECellState[,] gameBoard)
     {
+        
         Console.Clear();
         
         int height = gameBoard.GetLength(0);
@@ -26,25 +27,13 @@ public static class Ui
         
         for (int row = 0; row < height; row++)
         {
-            for (int col = 0; col < width - 1; col++)
-            {
-                Console.Write("---+");
-            }
-            Console.Write("---");
-            Console.WriteLine();
-
             for (int col = 0; col < width; col++)
             {
-                if (col == 0)
-                {
-                    Console.Write(GetCellRepresentation(gameBoard[row, col]));
-                }
-                else
-                {
-                    Console.Write("|" + GetCellRepresentation(gameBoard[row, col]));
-                }
+                Console.Write(GetCellRepresentation(gameBoard[row, col]));
             }
             Console.WriteLine();
+
+            
         }
         Console.WriteLine();
     }
@@ -53,13 +42,13 @@ public static class Ui
     {
         Console.WriteLine();
         Console.WriteLine("================================");
-        if (winner == ECellState.XWin)
+        if (winner == ECellState.RedWin)
         {
-            Console.WriteLine("       PLAYER O WINS!");
+            Console.WriteLine("       PLAYER 🔴 WINS!");
         }
-        else if (winner == ECellState.OWin)
+        else if (winner == ECellState.BlueWin)
         {
-            Console.WriteLine("       PLAYER X WINS!");
+            Console.WriteLine("       PLAYER 🔵 WINS!");
         }
         else
         {
@@ -99,11 +88,11 @@ public static class Ui
     {
         return cellValue switch
         {
-            ECellState.Empty => "   ",
-            ECellState.X => " X ",
-            ECellState.O => " O ",
-            ECellState.XWin => "XXX",
-            ECellState.OWin => "OOO",
+            ECellState.Empty => " ⚪️ ",
+            ECellState.Red => " 🔴 ",
+            ECellState.Blue => " 🔵 ",
+            ECellState.RedWin => " 🔴 ",
+            ECellState.BlueWin => " 🔵 ",
             _ => " ? "
         };
     }
