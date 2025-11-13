@@ -4,12 +4,13 @@ public class GameBrain
 {
     private ECellState[,] GameBoard { get; set; }
     private GameConfiguration GameConfiguration { get; set; }
-    private string Player1Name { get; set; }
-    private string Player2Name { get; set; }
+    public string Player1Name { get; set; }
+    public string Player2Name { get; set; }
 
-    private bool NextMoveByX { get; set; } = true;
+    public bool NextMoveByRed { get; set; } = true;
     public bool GameOver { get; set; } = false;
     public ECellState Winner { get; set; } = ECellState.Empty;
+    public int MoveCount { get; set; } = 0;
     
     public GameBrain(GameConfiguration configuration, string player1Name, string player2Name)
     {
@@ -17,6 +18,7 @@ public class GameBrain
         GameConfiguration.Validate();
         Player1Name = player1Name;
         Player2Name = player2Name;
+        // Board is [row, column] - rows are Y axis, columns are X axis
         GameBoard = new ECellState[configuration.BoardHeight, configuration.BoardWidth];
     }
 
@@ -29,9 +31,9 @@ public class GameBrain
 
     public GameConfiguration GetConfiguration() => GameConfiguration;
 
-    public bool IsNextPlayerX() => NextMoveByX;
+    public bool IsNextPlayerX() => NextMoveByRed;
 
-    public bool ColumnIsFull(int column)
+    public bool IsColumnFull(int column)
     {
         if (column < 0 || column >= GameConfiguration.BoardWidth)
             return true;
@@ -39,6 +41,7 @@ public class GameBrain
         return GameBoard[0, column] != ECellState.Empty;
     }
 
+    // Returns the row where piece was placed, or null if move failed
     public int? ProcessMove(int column)
     {
         if (column < 0 || column >= GameConfiguration.BoardWidth)
@@ -51,21 +54,22 @@ public class GameBrain
             return null;
         }
         
+        // Find the lowest empty row in the column
         for (int row = GameConfiguration.BoardHeight - 1; row >= 0; row--)
         {
             if (GameBoard[row, column] == ECellState.Empty)
             {
-                GameBoard[row, column] = NextMoveByX ? ECellState.Red : ECellState.Blue;
+                GameBoard[row, column] = NextMoveByRed ? ECellState.Red : ECellState.Blue;
+                MoveCount++;
                 return row;
             }
         }
         
-        return null;
+        return null; // Column is full
     }
-
     public void SwitchPlayer()
     {
-        NextMoveByX = !NextMoveByX;
+        NextMoveByRed = !NextMoveByRed;
     }
 
     // Check if the last move resulted in a win
@@ -144,7 +148,7 @@ public class GameBrain
     {
         for (int col = 0; col < GameConfiguration.BoardWidth; col++)
         {
-            if (!ColumnIsFull(col))
+            if (!IsColumnFull(col))
                 return false;
         }
         return true;
@@ -154,5 +158,24 @@ public class GameBrain
     {
         GameOver = true;
         Winner = winner;
+    }
+
+    public string GetCurrentPlayerName()
+    {
+        return NextMoveByRed ? Player1Name : Player2Name;
+    }
+
+    // Method to restore board state (for loading saved games)
+    public void SetBoard(ECellState[,] board)
+    {
+        if (board.GetLength(0) == GameConfiguration.BoardHeight && 
+            board.GetLength(1) == GameConfiguration.BoardWidth)
+        {
+            GameBoard = board;
+        }
+        else
+        {
+            throw new ArgumentException("Board dimensions don't match configuration");
+        }
     }
 }

@@ -11,24 +11,38 @@ public class GameController
     {
         GameBrain = new GameBrain(config, "Player 1", "Player 2");
     }
-    public static GameConfiguration SetGameConfiguration()
+
+    public static GameConfiguration? SetGameConfiguration()
     {
         var gameConfig = new GameConfiguration();
         
         Console.Clear();
         Console.WriteLine("=== Create Custom Game Configuration ===\n");
 
+        // Get name
+        Console.Write("Game name: ");
+        var nameInput = Console.ReadLine()?.Trim().ToLower();
+        if (nameInput == "b" || nameInput == "x")
+            return null;
+        if (!string.IsNullOrEmpty(nameInput))
+            gameConfig.Name = nameInput;
+
+        // Set Width
         bool widthIsSet = false;
         while (!widthIsSet)
         {
             Console.Write("Set Game Board Width (3-20): ");
-            var input = Console.ReadLine()?.Trim();
+            var input = Console.ReadLine()?.Trim().ToLower();
+            
+            if (input == "b" || input == "x")
+                return null;
             
             if (string.IsNullOrEmpty(input))
             {
-                Console.WriteLine("Width can not be null.");
+                Console.WriteLine("Error: Value cannot be empty.");
                 continue;
             }
+            
             if (int.TryParse(input, out var width))
             {
                 try
@@ -41,6 +55,10 @@ public class GameController
                     Console.WriteLine($"Error: {ex.Message}");
                 }
             }
+            else
+            {
+                Console.WriteLine("Error: Please enter a valid number.");
+            }
         }
         
         // Set Height
@@ -48,13 +66,17 @@ public class GameController
         while (!heightIsSet)
         {
             Console.Write("Set Game Board Height (3-20): ");
-            var input = Console.ReadLine()?.Trim();
+            var input = Console.ReadLine()?.Trim().ToLower();
             
-            // if (string.IsNullOrEmpty(input))
-            // {
-            //     gameConfig.BoardHeight = 6;
-            //     heightIsSet = true;
-            // }
+            if (input == "b" || input == "x")
+                return null;
+            
+            if (string.IsNullOrEmpty(input))
+            {
+                Console.WriteLine("Error: Value cannot be empty.");
+                continue;
+            }
+            
             if (int.TryParse(input, out var height))
             {
                 try
@@ -67,6 +89,10 @@ public class GameController
                     Console.WriteLine($"Error: {ex.Message}");
                 }
             }
+            else
+            {
+                Console.WriteLine("Error: Please enter a valid number.");
+            }
         }
         
         // Set Win Condition
@@ -74,14 +100,18 @@ public class GameController
         while (!winCondSet)
         {
             Console.Write($"Set Win Condition (3-{Math.Max(gameConfig.BoardWidth, gameConfig.BoardHeight)}): ");
-            var input = Console.ReadLine()?.Trim();
+            var input = Console.ReadLine()?.Trim().ToLower();
+            
+            if (input == "b" || input == "x")
+                return null;
             
             if (string.IsNullOrEmpty(input))
             {
-                gameConfig.WinCondition = 4;
-                winCondSet = true;
+                Console.WriteLine("Error: Value cannot be empty.");
+                continue;
             }
-            else if (int.TryParse(input, out var cond))
+            
+            if (int.TryParse(input, out var cond))
             {
                 try
                 {
@@ -93,15 +123,46 @@ public class GameController
                     Console.WriteLine($"Error: {ex.Message}");
                 }
             }
+            else
+            {
+                Console.WriteLine("Error: Please enter a valid number.");
+            }
         }
 
         // Set Board Type
-        Console.WriteLine("\nBoard Type:");
-        Console.WriteLine("1) Rectangle");
-        Console.WriteLine("2) Cylinder");
-        Console.Write("Select type: ");
-        var typeInput = Console.ReadLine()?.Trim();
-        gameConfig.SetBoardType(typeInput == "2" ? EBoardType.Cylinder : EBoardType.Rectangle);
+        bool boardTypeSet = false;
+        while (!boardTypeSet)
+        {
+            Console.WriteLine("\nBoard Type:");
+            Console.WriteLine("1) Rectangle");
+            Console.WriteLine("2) Cylinder");
+            Console.Write("Select type: ");
+            var typeInput = Console.ReadLine()?.Trim().ToLower();
+            
+            if (typeInput == "b" || typeInput == "x")
+                return null;
+            
+            if (string.IsNullOrEmpty(typeInput))
+            {
+                Console.WriteLine("Error: Value cannot be empty.");
+                continue;
+            }
+            
+            if (typeInput == "1")
+            {
+                gameConfig.SetBoardType(EBoardType.Rectangle);
+                boardTypeSet = true;
+            }
+            else if (typeInput == "2")
+            {
+                gameConfig.SetBoardType(EBoardType.Cylinder);
+                boardTypeSet = true;
+            }
+            else
+            {
+                Console.WriteLine("Error: Please enter 1 or 2.");
+            }
+        }
         
         // Set Player Types
         bool playerTypesSet = false;
@@ -109,13 +170,22 @@ public class GameController
         {
             Console.WriteLine("\nSet Game Player Types:");
             Console.WriteLine("1) Human vs Human");
-            Console.WriteLine("2) Human vs Computer");
-            Console.WriteLine("3) Computer vs Computer");
+            Console.WriteLine("2) Human vs Computer (Coming in HW05)");
+            Console.WriteLine("3) Computer vs Computer (Coming in HW05)");
             Console.Write("Select: ");
             
-            string? input = Console.ReadLine()?.Trim();
+            string? input = Console.ReadLine()?.Trim().ToLower();
             
-            if (string.IsNullOrEmpty(input) || input == "1")
+            if (input == "b" || input == "x")
+                return null;
+            
+            if (string.IsNullOrEmpty(input))
+            {
+                Console.WriteLine("Error: Value cannot be empty.");
+                continue;
+            }
+            
+            if (input == "1")
             {
                 gameConfig.SetP1Type(EPlayerType.Human);
                 gameConfig.SetP2Type(EPlayerType.Human);
@@ -123,26 +193,28 @@ public class GameController
             }
             else if (input == "2")
             {
+                Console.WriteLine("\n⚠️  AI not yet implemented. Using Human vs Human.");
                 gameConfig.SetP1Type(EPlayerType.Human);
-                gameConfig.SetP2Type(EPlayerType.Computer);
+                gameConfig.SetP2Type(EPlayerType.Human);
                 playerTypesSet = true;
                 Thread.Sleep(1500);
             }
             else if (input == "3")
             {
-                gameConfig.SetP1Type(EPlayerType.Computer);
-                gameConfig.SetP2Type(EPlayerType.Computer);
+                Console.WriteLine("\n⚠️  AI not yet implemented. Using Human vs Human.");
+                gameConfig.SetP1Type(EPlayerType.Human);
+                gameConfig.SetP2Type(EPlayerType.Human);
                 playerTypesSet = true;
                 Thread.Sleep(1500);
             }
             else
             {
-                Console.WriteLine("Invalid input. Please try again.");
+                Console.WriteLine("Error: Please enter 1, 2, or 3.");
             }
         }
 
         Console.WriteLine($"\n✓ Configuration created: {gameConfig}");
-        Thread.Sleep(2000);
+        Thread.Sleep(1500);
         
         return gameConfig;
     }
@@ -154,67 +226,60 @@ public class GameController
         while (!GameBrain.GameOver)
         {
             var board = GameBrain.GetBoard();
-            Ui.DrawBoard(board);
-            Ui.ShowGameInfo(config.Name, config.BoardWidth, config.BoardHeight, config.WinCondition, config.BoardType);
-            Ui.ShowNextPlayer(GameBrain.IsNextPlayerX());
             
-            Console.Write("Enter column number (or 'x' to exit): ");
-            var input = Console.ReadLine()?.Trim().ToLower();
+            // Use new UI with arrow key selection
+            int? selectedColumn = Ui.SelectColumn(
+                board, 
+                config.Name, 
+                config.BoardWidth, 
+                config.BoardHeight, 
+                config.WinCondition, 
+                config.BoardType,
+                GameBrain.IsNextPlayerX()
+            );
             
-            if (input == "x")
+            // User pressed ESC
+            if (selectedColumn == null)
             {
                 Console.WriteLine("\nGame quit. Returning to menu...");
                 Thread.Sleep(1000);
-                return "x";
+                return "b";
             }
 
-            if (int.TryParse(input, out var columnInput))
+            int column = selectedColumn.Value;
+            
+            // Check if column is valid
+            if (!GameBrain.IsColumnFull(column))
             {
-                int column = columnInput - 1; // Convert to 0-indexed
-                
-                if (column >= 0 && column < config.BoardWidth)
+                // Process move and get row
+                int? row = GameBrain.ProcessMove(column);
+
+                if (row.HasValue)
                 {
-                    if (!GameBrain.ColumnIsFull(column))
+                    // Piece that was just placed
+                    var piece = GameBrain.IsNextPlayerX() ? ECellState.Red : ECellState.Blue;
+
+                    // Check for win
+                    if (GameBrain.CheckWin(row.Value, column))
                     {
-                        // Process move and get row
-                        int? row = GameBrain.ProcessMove(column);
-
-                        if (row.HasValue)
-                        {
-                            // Piece that was just placed
-                            var piece = GameBrain.IsNextPlayerX() ? ECellState.Red : ECellState.Blue;
-
-                            // Check for win
-                            if (GameBrain.CheckWin(row.Value, column))
-                            {
-                                var winner = piece == ECellState.Red ? ECellState.RedWin : ECellState.BlueWin;
-                                GameBrain.SetGameOver(winner);
-                            }
-                            // Check for draw
-                            else if (GameBrain.IsBoardFull())
-                            {
-                                GameBrain.SetGameOver(ECellState.Empty);
-                            }
-                            else
-                            {
-                                // Switch player
-                                GameBrain.SwitchPlayer();
-                            }
-                        }
+                        var winner = piece == ECellState.Red ? ECellState.RedWin : ECellState.BlueWin;
+                        GameBrain.SetGameOver(winner);
+                    }
+                    // Check for draw
+                    else if (GameBrain.IsBoardFull())
+                    {
+                        GameBrain.SetGameOver(ECellState.Empty);
                     }
                     else
                     {
-                        Ui.ShowError("That column is full! Choose another.");
+                        // Switch player
+                        GameBrain.SwitchPlayer();
                     }
-                }
-                else
-                {
-                    Ui.ShowError($"Please enter a number between 1 and {config.BoardWidth}.");
                 }
             }
             else
             {
-                Ui.ShowError("Invalid input. Please enter a column number.");
+                Ui.ShowError("That column is full! Choose another.");
             }
         }
 

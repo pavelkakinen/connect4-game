@@ -51,7 +51,42 @@ public class GameConfiguration
             WinCondition = 4,
             BoardType = EBoardType.Cylinder
         };
+
+    public static GameConfiguration PlayerTypeHumanHuman(GameConfiguration config) =>
+        new GameConfiguration
+        {
+            Name = config.Name,
+            BoardWidth = config.BoardWidth,
+            BoardHeight = config.BoardHeight,
+            WinCondition = config.WinCondition,
+            BoardType = config.BoardType,
+            P1Type = EPlayerType.Human,
+            P2Type = EPlayerType.Human
+        };
     
+    public static GameConfiguration PlayerTypeHumanComputer(GameConfiguration config) =>
+        new GameConfiguration
+        {
+            Name = config.Name,
+            BoardWidth = config.BoardWidth,
+            BoardHeight = config.BoardHeight,
+            WinCondition = config.WinCondition,
+            BoardType = config.BoardType,
+            P1Type = EPlayerType.Human,
+            P2Type = EPlayerType.Computer
+        };
+    
+    public static GameConfiguration PlayerTypeComputerComputer(GameConfiguration config) =>
+        new GameConfiguration
+        {
+            Name = config.Name,
+            BoardWidth = config.BoardWidth,
+            BoardHeight = config.BoardHeight,
+            WinCondition = config.WinCondition,
+            BoardType = config.BoardType,
+            P1Type = EPlayerType.Computer,
+            P2Type = EPlayerType.Computer
+        };
     public void SetWidth(int x)
     {
         if (x < 3 || x > 20)
