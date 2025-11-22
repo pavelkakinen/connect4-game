@@ -15,11 +15,10 @@ public class GameBrain
     public GameBrain(GameConfiguration configuration, string player1Name, string player2Name)
     {
         GameConfiguration = configuration;
-        GameConfiguration.Validate();
         Player1Name = player1Name;
         Player2Name = player2Name;
-        // Board is [row, column] - rows are Y axis, columns are X axis
-        GameBoard = new ECellState[configuration.BoardHeight, configuration.BoardWidth];
+        // Board is [row, column] - rows are X axis, columns are Y axis
+        GameBoard = new ECellState[configuration.BoardWidth, configuration.BoardHeight];
     }
 
     public ECellState[,] GetBoard()
@@ -31,9 +30,9 @@ public class GameBrain
 
     public GameConfiguration GetConfiguration() => GameConfiguration;
 
-    public bool IsNextPlayerX() => NextMoveByRed;
+    public bool IsNextPlayerRed() => NextMoveByRed;
 
-    public bool IsColumnFull(int column)
+    public bool ColumnIsFull(int column)
     {
         if (column < 0 || column >= GameConfiguration.BoardWidth)
             return true;
@@ -67,6 +66,7 @@ public class GameBrain
         
         return null; // Column is full
     }
+
     public void SwitchPlayer()
     {
         NextMoveByRed = !NextMoveByRed;
@@ -148,7 +148,7 @@ public class GameBrain
     {
         for (int col = 0; col < GameConfiguration.BoardWidth; col++)
         {
-            if (!IsColumnFull(col))
+            if (!ColumnIsFull(col))
                 return false;
         }
         return true;

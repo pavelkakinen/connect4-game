@@ -1,117 +1,70 @@
 ﻿using BLL;
 using ConsoleApp;
-using DAL;
 using MenuSystem;
+using DAL;
 
-Console.OutputEncoding = System.Text.Encoding.UTF8;
+// All Menus here
+Menu menuRoot = new Menu("Connect Four", EMenuLevel.Root);
+Menu menuChooseConfig =  new Menu("Choose Config", EMenuLevel.First);
+Menu menuChoosePlayer = new Menu("Choose Players", EMenuLevel.Deep);
 
+
+// Configuration and Controller
 var config = GameConfiguration.Classic();
-var controller = new GameController(config);
 
-var mainMenu = new Menu("=== Connect Four ===", EMenuLevel.Root);
-
-var predefinedConfigMenu = new Menu("=== Predefined Config ===", EMenuLevel.First);
-
-var playerTypeMenu = new Menu("=== Player Type Menu ===", EMenuLevel.Deep);
-
-var configMenu = new Menu("=== All Configs ===", EMenuLevel.First);
+// MenuRoot add items here
+menuRoot.AddMenuItem("1", "Choose configuration", menuChooseConfig.Run);
 
 
-mainMenu.AddMenuItem("1", "Play Game", () =>
-{
-    predefinedConfigMenu.Run();
-    return "p";
-});
-
-mainMenu.AddMenuItem("2", "Set Own Configurations", () =>
-{
-    var config = GameController.SetGameConfiguration();
-    var controller = new GameController(config);
-    return controller.GameLoop();
-});
-
-mainMenu.AddMenuItem("3", "All Configurations", configMenu.Run);
-
-
-
-predefinedConfigMenu.AddMenuItem("1", "Classic Connect 4 (7x6, Win: 4)", () =>
+// MenuChooseConfig add items here
+menuChooseConfig.AddMenuItem("1", "Classic Connect 4 (7x6)", () =>
 {
     config = GameConfiguration.Classic();
-    controller = new GameController(config);
-    return playerTypeMenu.Run();
+    var result = menuChoosePlayer.Run();
+    return result;
 });
-
-predefinedConfigMenu.AddMenuItem("2", "Connect 3 (5x4, Win: 3)", () =>
+menuChooseConfig.AddMenuItem("2", "Connect 3 (5x4)", () =>
 {
     config = GameConfiguration.Connect3();
-    controller = new GameController(config);
-    return playerTypeMenu.Run();
+    var result = menuChoosePlayer.Run();
+    return result;
 });
-
-predefinedConfigMenu.AddMenuItem("3", "Connect 5 (9x7, Win: 5)", () =>
+menuChooseConfig.AddMenuItem("3", "Connect 5 (9x7)", () =>
 {
     config = GameConfiguration.Connect5();
-    controller = new GameController(config);
-    return playerTypeMenu.Run();
+    var result = menuChoosePlayer.Run();
+    return result;
 });
-
-predefinedConfigMenu.AddMenuItem("4", "Cylinder Connect 4 (7x6, Win: 4)", () =>
+menuChooseConfig.AddMenuItem("4", "Connect 4 Cylinder (7x6)", () =>
 {
     config = GameConfiguration.Connect4Cylinder();
-    controller = new GameController(config);
-    return playerTypeMenu.Run();
+    var result = menuChoosePlayer.Run();
+    return result;
 });
 
 
-
-
-playerTypeMenu.AddMenuItem("1", "Human vs Human", () =>
+// MenuChoosePlayer add items here
+menuChoosePlayer.AddMenuItem("1", "Human vs Human", () =>
 {
-    config = GameConfiguration.PlayerTypeHumanHuman(config);
-    controller = new GameController(config);
-    return controller.GameLoop();
+    var finalConfig = GameConfiguration.PlayerTypeHumanHuman(config);
+    var controller = new GameController(finalConfig);
+    controller.GameLoop();
+    return "m";
 });
-playerTypeMenu.AddMenuItem("2", "Human vs Computer", () =>
+menuChoosePlayer.AddMenuItem("2", "Human vs Computer", () =>
 {
-    config = GameConfiguration.PlayerTypeHumanComputer(config);
-    controller = new GameController(config);
-    return controller.GameLoop();
+    var finalConfig = GameConfiguration.PlayerTypeHumanComputer(config);
+    var controller = new GameController(finalConfig);
+    controller.GameLoop();
+    return "m";
 });
-playerTypeMenu.AddMenuItem("3", "Computer vs Computer", () =>
+menuChoosePlayer.AddMenuItem("3", "Computer vs Computer", () =>
 {
-    config = GameConfiguration.PlayerTypeComputerComputer(config);
-    controller = new GameController(config);
-    return controller.GameLoop();
+    var finalConfig = GameConfiguration.PlayerTypeComputerComputer(config);
+    var controller = new GameController(finalConfig);
+    controller.GameLoop();
+    return "m";
 });
 
 
-
-
-var configRepo = new ConfigRepositoryJson();
-configMenu.AddMenuItem("1", "Load", () =>
-{
-    var count = 0;
-    var data = configRepo.List();
-    foreach (var item in data)
-    {
-        Console.WriteLine(count + ": " + item);
-        count++;
-    }
-    Thread.Sleep(2000);
-
-    return "abc";
-});
-configMenu.AddMenuItem("2", "Edit", () =>
-{
-    return "abc";
-});
-configMenu.AddMenuItem("3", "Create", () =>
-{
-    configRepo.Save(new GameConfiguration { Name = "classical" });
-    return "abc";
-});
-configMenu.AddMenuItem("4", "Delete", () => { return "abc";});
-
-
-
-mainMenu.Run();
+menuRoot.Run();

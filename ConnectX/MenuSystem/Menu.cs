@@ -41,26 +41,20 @@ public class Menu
 
     public string Run()
     {
-        
         var menuRunning = true;
         var userChoice = "";
-        
         var option = 0;
-        
         var menuItemsList = MenuItems.Values.ToList();
+        var returnValueFromMethodToRun = "";
         
         do
         {
+
             Console.Clear();
             (int left, int top) = Console.GetCursorPosition();
-            
             Console.SetCursorPosition(left, top);
-            
             DisplayMenu(menuItemsList, option);
-
             var keyInfo = Console.ReadKey(true);
-
-            var userInput = "";
             switch (keyInfo.Key)
             {
                 case ConsoleKey.UpArrow:
@@ -70,53 +64,48 @@ public class Menu
                     option = (option == MenuItems.Count - 1 ? 0 : option + 1);
                     break;
                 case ConsoleKey.Enter:
-                    userInput = menuItemsList[option].Key;
+                    userChoice = menuItemsList[option].Key;
                     break;
             }
-            
-            if (userInput == null)
-            {
-                Console.WriteLine("Invalid input. Please try again.");
-                continue;
-            }
 
-            userChoice = userInput.Trim().ToLower();
-
-            if (userChoice == "x" || userChoice == "m" || userChoice == "b")
+            if (MenuItems.ContainsKey(userChoice))
             {
-                menuRunning = false;
-            }
-            else
-            {
-                if (MenuItems.ContainsKey(userChoice))
+                if (userChoice == "x" || userChoice == "m" || userChoice == "b")
                 {
-                    var returnValueFromMethodToRun = MenuItems[userChoice].MethodToRun?.Invoke();
-
+                    menuRunning = false;
+                }
+                else
+                {
+                    returnValueFromMethodToRun = MenuItems[userChoice].MethodToRun?.Invoke();
                     if (returnValueFromMethodToRun == "x")
                     {
                         menuRunning = false;
                         userChoice = "x";
-                    }
-                    else if (returnValueFromMethodToRun == "m" && Level != EMenuLevel.Root)
+                    } else if (returnValueFromMethodToRun == "m")
                     {
-                        menuRunning = false;
-                        userChoice = "m";
+                        if (Level == EMenuLevel.Root)
+                        {
+                            userChoice = "";
+                        }
+                        else
+                        {
+                            menuRunning = false;
+                            userChoice = "m";
+                        }
+                    } else if (returnValueFromMethodToRun == "b")
+                    {
+                        userChoice = "";
                     }
-                }
-                else
-                {
-                    Console.WriteLine("Invalid input. Please try again.");
                 }
             }
         } while (menuRunning);
-        
         return userChoice;
     }
 
     private void DisplayMenu(List<MenuItem> menuItemsList, int option)
     {
-        Console.WriteLine(Title);
-        Console.WriteLine("-----------------------------");
+        Console.WriteLine($"=== {Title} ===");
+        Console.WriteLine("---------------------------");
         for (int i = 0; i < menuItemsList.Count; i++)
         {
             Console.WriteLine(option == i ? $" > {menuItemsList[i]}" : $"   {menuItemsList[i]}");

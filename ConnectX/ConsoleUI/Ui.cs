@@ -4,11 +4,11 @@ namespace ConsoleUI;
 
 public static class Ui
 {
-    public static int? SelectColumn(ECellState[,] gameBoard, string gameName, int width, int height, int winCondition, EBoardType boardType, bool isNextPlayerX)
+    public static int? SelectColumn(ECellState[,] gameBoard, string gameName, int width, int height, int winCondition, EBoardType boardType, bool isNextPlayerRed)
     {
         int column = 0;
         string empty = "   ";
-        string wanted = "⬇️   ";
+        string wanted = " ★ ";
         
         while (true)
         {
@@ -16,7 +16,7 @@ public static class Ui
             
             // Show game info
             ShowGameInfo(gameName, width, height, winCondition, boardType);
-            ShowNextPlayer(isNextPlayerX);
+            ShowNextPlayer(isNextPlayerRed);
             Console.WriteLine();
             
             // Show column selector
@@ -124,11 +124,11 @@ public static class Ui
     {
         return cellValue switch
         {
-            ECellState.Empty => "⚪️ ",
-            ECellState.Red => "🔴 ",
-            ECellState.Blue => "🔵 ",
-            ECellState.RedWin => "❌ ",
-            ECellState.BlueWin => "🔵 ",
+            ECellState.Empty => " ⚪️ ",
+            ECellState.Red => " 🔴 ",
+            ECellState.Blue => " 🔵 ",
+            ECellState.RedWin => " 🔴 ",
+            ECellState.BlueWin => " 🔵 ",
             _ => " ? "
         };
     }
