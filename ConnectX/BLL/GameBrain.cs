@@ -17,8 +17,8 @@ public class GameBrain
         GameConfiguration = configuration;
         Player1Name = player1Name;
         Player2Name = player2Name;
-        // Board is [row, column] - rows are X axis, columns are Y axis
-        GameBoard = new ECellState[configuration.BoardWidth, configuration.BoardHeight];
+        // Board is [row, column] - rows are Y axis, columns are X axis
+        GameBoard = new ECellState[configuration.BoardHeight, configuration.BoardWidth];
     }
 
     public ECellState[,] GetBoard()

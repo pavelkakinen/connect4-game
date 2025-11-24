@@ -3,14 +3,15 @@ using ConsoleApp;
 using MenuSystem;
 using DAL;
 
+
+// Configuration and Controller
+var config = GameConfiguration.Classic();
+
 // All Menus here
 Menu menuRoot = new Menu("Connect Four", EMenuLevel.Root);
 Menu menuChooseConfig =  new Menu("Choose Config", EMenuLevel.First);
 Menu menuChoosePlayer = new Menu("Choose Players", EMenuLevel.Deep);
 
-
-// Configuration and Controller
-var config = GameConfiguration.Classic();
 
 // MenuRoot add items here
 menuRoot.AddMenuItem("1", "Choose configuration", menuChooseConfig.Run);
