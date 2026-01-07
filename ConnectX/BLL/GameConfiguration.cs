@@ -1,15 +1,18 @@
+using Domain;
+
 namespace BLL;
 
 public class GameConfiguration
 {
-    public string Name { get; set; } = "Custom Game";
+    private string Name { get; set; } = "Custom Game";
     public int BoardWidth { get; set; } = 7;
     public int BoardHeight { get; set; } = 6;
     public int WinCondition { get; set; } = 4;
     public EBoardType BoardType { get; set; } = EBoardType.Rectangle;
+
+    public EPlayerType P1Type { get; private set; } = EPlayerType.Human;
+    public EPlayerType P2Type { get; private set; } = EPlayerType.Human;
     
-    public EPlayerType P1Type { get; set; } = EPlayerType.Human;
-    public EPlayerType P2Type { get; set; } = EPlayerType.Human;
 
     public static GameConfiguration Classic() => 
         new GameConfiguration 
@@ -51,42 +54,6 @@ public class GameConfiguration
             BoardType = EBoardType.Cylinder
         };
 
-    public static GameConfiguration PlayerTypeHumanHuman(GameConfiguration config) =>
-        new GameConfiguration
-        {
-            Name = config.Name,
-            BoardWidth = config.BoardWidth,
-            BoardHeight = config.BoardHeight,
-            WinCondition = config.WinCondition,
-            BoardType = config.BoardType,
-            P1Type = EPlayerType.Human,
-            P2Type = EPlayerType.Human
-        };
-    
-    public static GameConfiguration PlayerTypeHumanComputer(GameConfiguration config) =>
-        new GameConfiguration
-        {
-            Name = config.Name,
-            BoardWidth = config.BoardWidth,
-            BoardHeight = config.BoardHeight,
-            WinCondition = config.WinCondition,
-            BoardType = config.BoardType,
-            P1Type = EPlayerType.Human,
-            P2Type = EPlayerType.Computer
-        };
-    
-    public static GameConfiguration PlayerTypeComputerComputer(GameConfiguration config) =>
-        new GameConfiguration
-        {
-            Name = config.Name,
-            BoardWidth = config.BoardWidth,
-            BoardHeight = config.BoardHeight,
-            WinCondition = config.WinCondition,
-            BoardType = config.BoardType,
-            P1Type = EPlayerType.Computer,
-            P2Type = EPlayerType.Computer
-        };
-
     public void SetP1Type(EPlayerType p1Type)
     {
         P1Type = p1Type;
@@ -104,6 +71,6 @@ public class GameConfiguration
 
     public override string ToString()
     {
-        return $"{Name}: {BoardWidth}x{BoardHeight}, Win: {WinCondition}, Type: {BoardType}";
+        return $"{Name}: {BoardWidth}x{BoardHeight}, Win: {WinCondition}, Type: {BoardType}, P1: {P1Type},  P2: {P2Type}";
     }
 }

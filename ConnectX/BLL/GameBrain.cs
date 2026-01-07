@@ -1,24 +1,28 @@
-﻿namespace BLL;
+﻿using Domain;
+using DAL; 
+
+namespace BLL;
 
 public class GameBrain
 {
     private ECellState[,] GameBoard { get; set; }
+    public bool NextMoveByRed { get; private set; } = true;
     private GameConfiguration GameConfiguration { get; set; }
-    public string Player1Name { get; set; }
-    public string Player2Name { get; set; }
-
-    public bool NextMoveByRed { get; set; } = true;
-    public bool GameOver { get; set; } = false;
-    public ECellState Winner { get; set; } = ECellState.Empty;
-    public int MoveCount { get; set; } = 0;
+    private string Player1Name { get; }
+    private string Player2Name { get; }
     
-    public GameBrain(GameConfiguration configuration, string player1Name, string player2Name)
+    public GameConfiguration GetConfiguration()
+    {
+        return GameConfiguration;
+    }
+
+    public GameBrain(GameConfiguration configuration,  string player1Name, string player2Name)
     {
         GameConfiguration = configuration;
+        // [ROW, COLUMN] row - Y, column - X
+        GameBoard = new ECellState[GameConfiguration.BoardHeight, GameConfiguration.BoardWidth];
         Player1Name = player1Name;
         Player2Name = player2Name;
-        // Board is [row, column] - rows are Y axis, columns are X axis
-        GameBoard = new ECellState[configuration.BoardHeight, configuration.BoardWidth];
     }
 
     public ECellState[,] GetBoard()
@@ -28,154 +32,162 @@ public class GameBrain
         return gameBoardCopy;
     }
 
-    public GameConfiguration GetConfiguration() => GameConfiguration;
-
-    public bool IsNextPlayerRed() => NextMoveByRed;
-
-    public bool ColumnIsFull(int column)
+    public (bool success, int row) ProcessMove(int column)
     {
-        if (column < 0 || column >= GameConfiguration.BoardWidth)
-            return true;
-        
+        if (!ColumnIsFull(column))
+        {
+            for (int row = GameConfiguration.BoardHeight - 1; row >= 0; row--)
+            {
+                if (GameBoard[row, column] == ECellState.Empty)
+                {
+                    GameBoard[row, column] = NextMoveByRed ? ECellState.Red : ECellState.Blue;
+                    NextMoveByRed = !NextMoveByRed;
+                    return (true, row);
+                }
+            }
+        }
+        return (false, -1);
+    }
+
+    private bool ColumnIsFull(int column)
+    {
         return GameBoard[0, column] != ECellState.Empty;
     }
 
-    // Returns the row where piece was placed, or null if move failed
-    public int? ProcessMove(int column)
+    public bool BoardIsFull()
     {
-        if (column < 0 || column >= GameConfiguration.BoardWidth)
+        for (var column = 0; column < GameConfiguration.BoardWidth; column++)
         {
-            return null;
-        }
-
-        if (GameOver)
-        {
-            return null;
-        }
-        
-        // Find the lowest empty row in the column
-        for (int row = GameConfiguration.BoardHeight - 1; row >= 0; row--)
-        {
-            if (GameBoard[row, column] == ECellState.Empty)
+            if (!ColumnIsFull(column))
             {
-                GameBoard[row, column] = NextMoveByRed ? ECellState.Red : ECellState.Blue;
-                MoveCount++;
-                return row;
-            }
-        }
-        
-        return null; // Column is full
-    }
-
-    public void SwitchPlayer()
-    {
-        NextMoveByRed = !NextMoveByRed;
-    }
-
-    // Check if the last move resulted in a win
-    public bool CheckWin(int row, int column)
-    {
-        var player = GameBoard[row, column];
-        
-        if (player == ECellState.Empty)
-            return false;
-
-        // Check all 4 directions: horizontal, vertical, diagonal-right, diagonal-left
-        if (CheckDirection(row, column, 0, 1, player)) return true;  // Horizontal
-        if (CheckDirection(row, column, 1, 0, player)) return true;  // Vertical
-        if (CheckDirection(row, column, 1, 1, player)) return true;  // Diagonal down-right
-        if (CheckDirection(row, column, 1, -1, player)) return true; // Diagonal down-left
-
-        return false;
-    }
-
-    private bool CheckDirection(int row, int col, int dRow, int dCol, ECellState player)
-    {
-        int count = 1; // Count the piece we just placed
-
-        // Check in positive direction
-        count += CountInDirection(row, col, dRow, dCol, player);
-        
-        // Check in negative direction
-        count += CountInDirection(row, col, -dRow, -dCol, player);
-
-        return count >= GameConfiguration.WinCondition;
-    }
-
-    private int CountInDirection(int row, int col, int dRow, int dCol, ECellState player)
-    {
-        int count = 0;
-        int currentRow = row + dRow;
-        int currentCol = col + dCol;
-
-        while (true)
-        {
-            // Handle cylinder wrapping for columns
-            if (GameConfiguration.BoardType == EBoardType.Cylinder)
-            {
-                currentCol = (currentCol + GameConfiguration.BoardWidth) % GameConfiguration.BoardWidth;
-                if (currentCol < 0)
-                    currentCol += GameConfiguration.BoardWidth;
-            }
-
-            // Check bounds
-            if (currentRow < 0 || currentRow >= GameConfiguration.BoardHeight)
-                break;
-
-            if (GameConfiguration.BoardType == EBoardType.Rectangle)
-            {
-                if (currentCol < 0 || currentCol >= GameConfiguration.BoardWidth)
-                    break;
-            }
-
-            // Check if piece matches
-            if (GameBoard[currentRow, currentCol] == player)
-            {
-                count++;
-                currentRow += dRow;
-                currentCol += dCol;
-            }
-            else
-            {
-                break;
-            }
-        }
-
-        return count;
-    }
-
-    public bool IsBoardFull()
-    {
-        for (int col = 0; col < GameConfiguration.BoardWidth; col++)
-        {
-            if (!ColumnIsFull(col))
                 return false;
+            }
         }
+
         return true;
     }
 
-    public void SetGameOver(ECellState winner)
+    private (int row, int col) GetDirection(int index) =>
+        index switch
+        {
+            0 => (-1, -1),
+            1 => (-1, 0),
+            2 => (-1, 1),
+            3 => (0, 1),
+            _ => (0, 0)
+        };
+
+    private int NormalizeColumn(int column)
     {
-        GameOver = true;
-        Winner = winner;
+        if (GameConfiguration.BoardType == EBoardType.Cylinder)
+        {
+            return (column % GameConfiguration.BoardWidth + GameConfiguration.BoardWidth) % GameConfiguration.BoardWidth;
+        }
+
+        return column;
     }
 
-    public string GetCurrentPlayerName()
+    private bool ValidateCoordinates(int row, int col)
     {
-        return NextMoveByRed ? Player1Name : Player2Name;
+        if (row < 0 || row >= GameConfiguration.BoardHeight) return false;
+
+        if (GameConfiguration.BoardType == EBoardType.Cylinder)
+            return true;
+
+        if (col < 0 || col >= GameConfiguration.BoardWidth) return false;
+        return true;
     }
 
-    // Method to restore board state (for loading saved games)
-    public void SetBoard(ECellState[,] board)
+    private List<(int row, int col)> GetSellsInDirection(int row, int column, int dirY, int dirX)
     {
-        if (board.GetLength(0) == GameConfiguration.BoardHeight && 
-            board.GetLength(1) == GameConfiguration.BoardWidth)
+        var cells = new List<(int row, int col)>();
+        
+        var count = 0;
+
+        var nextY = row + dirY;
+        var nextX = NormalizeColumn(column +  dirX);
+        
+        while (ValidateCoordinates(nextY, nextX) &&
+               GameBoard[nextY, NormalizeColumn(nextX)] == GameBoard[row, column])
         {
-            GameBoard = board;
+            cells.Add((nextY, nextX));
+            count++;
+            nextY += dirY;
+            nextX = NormalizeColumn(nextX + dirX);
         }
-        else
-        {
-            throw new ArgumentException("Board dimensions don't match configuration");
-        }
+        
+        return cells;
     }
+
+    public (ECellState winner, List<(int row, int col)> winningCells) CheckWin(int row, int column)
+    {
+        for (int index = 0; index < 4; index++)
+        {
+            var winningCells = new List<(int row, int col)>();
+            var (dirY,  dirX) = GetDirection(index);
+            
+            var cells1 = GetSellsInDirection(row, column, dirY,dirX);
+            var cells2 = GetSellsInDirection(row, column, -dirY, -dirX);
+
+            winningCells.AddRange(cells1);
+            winningCells.AddRange(cells2);
+            
+            winningCells.Add((row, column));
+            if (winningCells.Count >= GameConfiguration.WinCondition)
+            {
+                return (GameBoard[row, column], winningCells);
+            }
+        }
+
+        return (ECellState.Empty, null);
+    }
+
+    public bool IsNextMoveByRed() => NextMoveByRed;
+    
+    public GameState GetGameState() =>
+    new GameState()
+    {
+        GameId = "",
+        SavedAt = DateTime.Now,
+        BoardWidth = GameConfiguration.BoardWidth,
+        BoardHeight = GameConfiguration.BoardHeight,
+        WinCond = GameConfiguration.WinCondition,
+        BoardType = GameConfiguration.BoardType,
+        Player1Name = Player1Name,
+        Player2Name = Player2Name,
+        IsNextMoveByRed = NextMoveByRed,
+        Board = ConvertBoardToList()
+    };
+    
+    
+    private List<List<int>> ConvertBoardToList()
+    {
+        var list = new List<List<int>>();
+        
+        for (int row = 0; row < GameConfiguration.BoardHeight; row++)
+        {
+            var rowList = new List<int>();
+            for (int col = 0; col < GameConfiguration.BoardWidth; col++)
+            {
+                rowList.Add((int)GameBoard[row, col]);
+            }
+            list.Add(rowList);
+        }
+        
+        return list;
+    }
+    
+    public void LoadFromGameState(GameState state)
+    {
+        for (int row = 0; row < state.BoardHeight; row++)
+        {
+            for (int col = 0; col < state.BoardWidth; col++)
+            {
+                GameBoard[row, col] = (ECellState)state.Board[row][col];
+            }
+        }
+        
+        NextMoveByRed = state.IsNextMoveByRed;
+    }
+
 }

@@ -35,6 +35,8 @@ public class Menu
                 MenuItems["b"] = new MenuItem() {Key = "b", Value = "Back"};
                 MenuItems["x"] = new MenuItem() {Key = "x", Value = "Exit"};
                 break;
+            case EMenuLevel.Pause:
+                break;
         }
     }
 
@@ -77,6 +79,13 @@ public class Menu
                 else
                 {
                     returnValueFromMethodToRun = MenuItems[userChoice].MethodToRun?.Invoke();
+                    
+                    if (Level == EMenuLevel.Pause && returnValueFromMethodToRun == "continue")
+                    {
+                        menuRunning = false;
+                        userChoice = "continue";  // ← вернуть "continue"
+                    }
+                    
                     if (returnValueFromMethodToRun == "x")
                     {
                         menuRunning = false;

@@ -4,5 +4,6 @@ public enum EMenuLevel
 {
     Root,
     First,
-    Deep
+    Deep,
+    Pause
 }

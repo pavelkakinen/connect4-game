@@ -1,135 +1,126 @@
-﻿using BLL;
+﻿using Domain;
+using DAL;
+using BLL;
+using MenuSystem;
 
 namespace ConsoleUI;
 
 public static class Ui
 {
-    public static int? SelectColumn(ECellState[,] gameBoard, string gameName, int width, int height, int winCondition, EBoardType boardType, bool isNextPlayerRed)
+    public static void DrawBoard(ECellState[,] gameBoard, int selectedColumn)
     {
-        int column = 0;
-        string empty = "   ";
-        string wanted = " ★ ";
-        
-        while (true)
+        Console.Clear();
+        for (int i = 0; i < gameBoard.GetLength(1); i++)
         {
-            Console.Clear();
-            
-            // Show game info
-            ShowGameInfo(gameName, width, height, winCondition, boardType);
-            ShowNextPlayer(isNextPlayerRed);
-            Console.WriteLine();
-            
-            // Show column selector
-            for (int col = 0; col < width; col++)
+            if (i == selectedColumn)
             {
-                if (col == column)
-                {
-                    Console.Write(wanted);
-                }
-                else
-                {
-                    Console.Write(empty);
-                }
+                Console.Write("⬇️ ");
             }
-            Console.WriteLine();
-            
-            // Show board
-            for (int row = 0; row < height; row++)
+            else
             {
-                for (int col = 0; col < width; col++)
-                {
-                    Console.Write(GetCellRepresentation(gameBoard[row, col]));
-                }
-                Console.WriteLine();
-            }
-            Console.WriteLine();
-            Console.WriteLine("Use ← → arrows to select column, ENTER to drop piece, ESC to quit");
-            
-            var key = Console.ReadKey(true);
-            switch (key.Key)
-            {
-                case ConsoleKey.LeftArrow:
-                    column = (column == 0) ? width - 1 : column - 1;
-                    break;
-                case ConsoleKey.RightArrow:
-                    column = (column == width - 1) ? 0 : column + 1;
-                    break;
-                case ConsoleKey.Enter:
-                    return column; // Return selected column
-                case ConsoleKey.Escape:
-                    return null; // User wants to quit
+                Console.Write("   ");
             }
         }
-    }
-
-    public static void DrawBoard(ECellState[,] gameBoard)
-    {
-        int height = gameBoard.GetLength(0);
-        int width = gameBoard.GetLength(1);
-        
-        Console.Clear();
-        
-        for (int row = 0; row < height; row++)
+        Console.WriteLine();
+        for (int row = 0; row < gameBoard.GetLength(0); row++)
         {
-            for (int col = 0; col < width; col++)
+            for (int col = 0; col < gameBoard.GetLength(1); col++)
             {
                 Console.Write(GetCellRepresentation(gameBoard[row, col]));
             }
             Console.WriteLine();
         }
-        Console.WriteLine();
     }
 
-    public static void ShowWinner(ECellState winner)
+    public static void DrawWinningBoard(
+        ECellState[,] gameBoard, 
+        ECellState winner,
+        List<(int row, int col)> winningCells
+        )
     {
-        Console.WriteLine();
-        Console.WriteLine("================================");
-        if (winner == ECellState.RedWin)
+        for (int row = 0; row < gameBoard.GetLength(0); row++)
         {
-            Console.WriteLine("       PLAYER 🔴 WINS!");
+            for (int col = 0; col < gameBoard.GetLength(1); col++)
+            {
+                if (winningCells.Contains((row, col)))
+                {
+                    var winCell = winner == ECellState.Red ? ECellState.RedWin : ECellState.BlueWin;
+                    Console.Write(GetCellRepresentation(winCell));
+                }
+                else
+                {
+                    Console.Write(GetCellRepresentation(gameBoard[row, col]));
+                }
+            }
+            Console.WriteLine();
         }
-        else if (winner == ECellState.BlueWin)
+    }
+
+    public static void PrintGameResult(ECellState winner)
+    {
+        if (winner == ECellState.Empty)
         {
-            Console.WriteLine("       PLAYER 🔵 WINS!");
+            Console.WriteLine("====================");
+            Console.WriteLine("    DRAW GAME");
+            Console.WriteLine("====================");
+        } else if (winner.Equals(ECellState.Red))
+        {
+            Console.WriteLine("====================");
+            Console.WriteLine("   🔴 RED WINS");
+            Console.WriteLine("====================");
+        } else if (winner.Equals(ECellState.Blue))
+        {
+            Console.WriteLine("====================");
+            Console.WriteLine("   🔵 BLUE WINS");
+            Console.WriteLine("====================");
+        }
+        Console.WriteLine();
+        Console.WriteLine("Press any key to continue...");
+        Console.ReadKey();
+
+    }
+
+    private static string GetCellRepresentation(ECellState cellValue) =>
+        cellValue switch
+        {
+            ECellState.Empty => "⬜️ ",
+            ECellState.Red => "🔴 ",
+            ECellState.Blue => "🔵 ",
+            ECellState.RedWin => "❌  ",
+            ECellState.BlueWin => "💙 ",
+            _ => " ? "
+        };
+
+    public static (string player1Name, string player2Name) GetPlayerNames(bool isVsComputer)
+    {
+        Console.Clear();
+        Console.WriteLine("╔════════════════════════════╗");
+        Console.WriteLine("║    ENTER PLAYER NAMES      ║");
+        Console.WriteLine("╚════════════════════════════╝");
+        Console.WriteLine();
+    
+        Console.Write("Player 1 (Red 🔴) name: ");
+        var player1Name = Console.ReadLine();
+        if (string.IsNullOrWhiteSpace(player1Name))
+        {
+            player1Name = "Player 1";
+        }
+    
+        string player2Name;
+        if (isVsComputer)
+        {
+            player2Name = "Computer";
         }
         else
         {
-            Console.WriteLine("         DRAW GAME!");
+            Console.Write("Player 2 (Blue 🔵) name: ");
+            player2Name = Console.ReadLine()!;
+            if (string.IsNullOrWhiteSpace(player2Name))
+            {
+                player2Name = "Player 2";
+            }
         }
-        Console.WriteLine("================================");
-        Console.WriteLine();
-        Console.WriteLine("Press any key to continue...");
-        Console.ReadKey();
-    }
-
-    public static void ShowGameInfo(string gameName, int width, int height, int winCondition, EBoardType boardType)
-    {
-        Console.WriteLine($"Game: {gameName} | Board: {width}x{height} | Win: {winCondition} | Type: {boardType}");
-    }
-
-    public static void ShowError(string message)
-    {
-        Console.WriteLine();
-        Console.WriteLine($"Error: {message}");
-        Console.WriteLine("Press any key to continue...");
-        Console.ReadKey();
-    }
     
-    public static void ShowNextPlayer(bool isNextPlayerX)
-    {
-        Console.WriteLine("Next Player: " + (isNextPlayerX ? "🔴 Red" : "🔵 Blue"));
-    }
-
-    private static string GetCellRepresentation(ECellState cellValue)
-    {
-        return cellValue switch
-        {
-            ECellState.Empty => " ⚪️ ",
-            ECellState.Red => " 🔴 ",
-            ECellState.Blue => " 🔵 ",
-            ECellState.RedWin => " 🔴 ",
-            ECellState.BlueWin => " 🔵 ",
-            _ => " ? "
-        };
+        return (player1Name, player2Name);
     }
 }
