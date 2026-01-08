@@ -19,7 +19,7 @@
             <form method="post" asp-page-handler="SaveAndExit" class="mb-2">
                 <input type="hidden" name="gameId" value="@Model.GameId" />
                 <button type="submit" class="btn btn-success btn-lg btn-block w-100">
-                    💾 Save and Exit to Menu
+                    Save and Exit to Menu
                 </button>
             </form>
             
@@ -27,14 +27,14 @@
                 <input type="hidden" name="gameId" value="@Model.GameId" />
                 <button type="submit" class="btn btn-danger btn-lg btn-block w-100"
                         onclick="return confirm('Delete this game? This cannot be undone!')">
-                    🗑️ Delete Game and Exit
+                    Delete Game and Exit
                 </button>
             </form>
             
             <form method="post" asp-page-handler="Continue">
                 <input type="hidden" name="gameId" value="@Model.GameId" />
                 <button type="submit" class="btn btn-primary btn-lg btn-block w-100">
-                    ▶️ Continue Playing
+                    Continue Playing
                 </button>
             </form>
         </div>
@@ -44,9 +44,7 @@
 @if (Model.Winner == ECellState.Red || Model.Winner == ECellState.Blue)
 {
     <div class="game-status-message winner-message">
-        <span class="celebration-emoji">🎉</span>
         <span class="winner-text">@Model.WinnerName wins!</span>
-        <span class="celebration-emoji">🎉</span>
     </div>
 }
 else if (Model.IsGameOver && Model.GameBrain.BoardIsFull())
@@ -64,7 +62,7 @@ else if (Model.IsGameOver && Model.GameBrain.BoardIsFull())
         <span class="player-symbol">@currentSymbol</span>
         
         <a href="?gameId=@Uri.EscapeDataString(Model.GameId)&pause=true" class="btn btn-warning btn-sm ms-3">
-            ⏸ Pause
+            Pause
         </a>
     </div>
 }
@@ -150,13 +148,13 @@ else if (Model.IsGameOver && Model.GameBrain.BoardIsFull())
             {
                 <hr />
                 <div class="alert alert-warning">
-                    <strong>⚠️ Read Only</strong><br/>
+                    <strong>Read Only</strong><br/>
                     This game has ended.<br/>
                     No moves allowed.
                 </div>
                 
                 <a href="/" class="btn btn-primary btn-lg w-100 mt-3">
-                    🏠 Back to Home
+                    Back to Home
                 </a>
             }
         </div>

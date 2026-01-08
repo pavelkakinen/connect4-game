@@ -13,7 +13,7 @@ using Microsoft.EntityFrameworkCore;
 var config = GameConfiguration.Classic();
 
 // ================ DB STAFF =================
-bool useDatabase = true;
+bool useDatabase = false;
 
 IRepository<GameState> gameRepository;
 
@@ -39,7 +39,8 @@ Menu menuChoosePlayer = new Menu("Choose Players", EMenuLevel.Deep);
 menuRoot.AddMenuItem("1", "Choose configuration", menuChooseConfig.Run);
 
 menuRoot.AddMenuItem("2", "Load Saved Game", () => 
-    SavedGamesMenu.ShowLoadMenu(
+{
+    var result = SavedGamesMenu.ShowLoadMenu(
         gameRepository,
         (config, gameId) =>
         {
@@ -55,14 +56,39 @@ menuRoot.AddMenuItem("2", "Load Saved Game", () =>
             controller.LoadGame(gameId);
             return controller.GameLoop();
         }
-    )
-);
+    );
+    
+    if (string.IsNullOrEmpty(result))
+    {
+        return "m";
+    }
+    
+    return result;
+});
 
 menuRoot.AddMenuItem("3", "Delete Saved Games", () => 
-    SavedGamesMenu.ShowDeleteMenu(gameRepository));
+{
+    var result = SavedGamesMenu.ShowDeleteMenu(gameRepository);
+    
+    if (string.IsNullOrEmpty(result))
+    {
+        return "m";
+    }
+    
+    return result;
+});
 
 menuRoot.AddMenuItem("4", "Edit Saved Game", () => 
-    SavedGamesMenu.ShowEditMenu(gameRepository));
+{
+    var result = SavedGamesMenu.ShowEditMenu(gameRepository);
+    
+    if (string.IsNullOrEmpty(result))
+    {
+        return "m";
+    }
+    
+    return result;
+});
 
 
 

@@ -9,27 +9,34 @@ namespace ConsoleApp;
 
 public class GameController
 {
-    private GameBrain GameBrain {get; set;}
+    private GameBrain GameBrain { get; set; }
     private IRepository<GameState> _gameRepository;
-    private IAIPlayer? _aiPlayer1;  // ← НОВОЕ! AI для игрока 1
-    private IAIPlayer? _aiPlayer2;  // ← НОВОЕ! AI для игрока 2
+    private IAIPlayer? _aiPlayer1;
+    private IAIPlayer? _aiPlayer2;
+    private string _player1Name;
+    private string _player2Name;
+    private string? _currentGameId;
 
     public GameController(
-        GameConfiguration configuration, 
-        string player1Name, 
+        GameConfiguration configuration,
+        string player1Name,
         string player2Name,
         IRepository<GameState> gameRepository)
     {
         GameBrain = new GameBrain(configuration, player1Name, player2Name);
         _gameRepository = gameRepository;
+        _player1Name = player1Name;
+        _player2Name = player2Name;
+        _currentGameId = null;
+        
         if (configuration.P1Type == EPlayerType.Computer)
         {
-            _aiPlayer1 = new MinimaxAI(maxDepth: 6);  // AI для игрока 1
+            _aiPlayer1 = new MinimaxAI(maxDepth: 6);
         }
-        
+
         if (configuration.P2Type == EPlayerType.Computer)
         {
-            _aiPlayer2 = new MinimaxAI(maxDepth: 6);  // AI для игрока 2
+            _aiPlayer2 = new MinimaxAI(maxDepth: 6);
         }
     }
 
@@ -37,10 +44,39 @@ public class GameController
     {
         while (true)
         {
+            // ========== CHECK IF GAME IS ALREADY OVER ==========
+            var (currentWinner, currentWinningCells) = GameBrain.CheckWin();
+            if (currentWinner != ECellState.Empty || GameBrain.BoardIsFull())
+            {
+                // Game is already finished - show final state and exit
+                Console.Clear();
+                
+                if (currentWinner != ECellState.Empty)
+                {
+                    Ui.DrawWinningBoard(GameBrain.GetBoard(), currentWinner, currentWinningCells);
+                    var winnerName = currentWinner == ECellState.Red ? _player1Name : _player2Name;
+                    Console.WriteLine($"\n🎉 {winnerName} WINS! 🎉");
+                }
+                else
+                {
+                    Ui.DrawBoard(GameBrain.GetBoard(), 0);
+                    Console.WriteLine("\n DRAW! Board is full! ");
+                }
+                
+                Console.WriteLine("\n============================");
+                Console.WriteLine("   GAME ALREADY FINISHED     ");
+                Console.WriteLine("============================");
+                Console.WriteLine("\nThis game has ended. You can only view it.");
+                Console.WriteLine("Press any key to return to menu...");
+                Console.ReadKey();
+                return "m";
+            }
+            // ===================================================
+            
             int columnChoice;
             bool isRedTurn = GameBrain.NextMoveByRed;
             bool isAIMove = false;
-            
+
             if (isRedTurn && _aiPlayer1 != null)
             {
                 // AI Player 1
@@ -57,7 +93,7 @@ public class GameController
             {
                 // Human player
                 columnChoice = GetColumnChoice();
-                
+
                 if (columnChoice == -1)
                 {
                     var pauseAction = ShowPauseMenu();
@@ -65,42 +101,54 @@ public class GameController
                     else if (pauseAction == "m") return "m";
                 }
             }
-            
-            // Сделай ход
+
+            // Make move
             var result = GameBrain.ProcessMove(columnChoice);
-            
+
             if (!result.success)
             {
                 Console.WriteLine("The column is full. Press any key to continue.");
                 Console.ReadKey();
                 continue;
             }
-            
-            // Если AI ходил - покажи что он сделал
+
+            // If AI moved - show what it did
             if (isAIMove)
             {
                 Console.Clear();
                 Ui.DrawBoard(GameBrain.GetBoard(), 0);
-                Console.WriteLine($"\n🤖 AI played column {columnChoice + 1}");
-                Console.ReadKey();
+                Console.WriteLine($"\n AI played column {columnChoice + 1}");
+                Thread.Sleep(1500);
             }
-            
-            // Проверка победы
+
+            // Check for win
             var winner = GameBrain.CheckWin(result.row, columnChoice);
             if (winner.winner != ECellState.Empty)
             {
                 Console.Clear();
                 Ui.DrawWinningBoard(GameBrain.GetBoard(), winner.winner, winner.winningCells);
-                Ui.PrintGameResult(winner.winner);
+                
+                var winnerName = winner.winner == ECellState.Red ? _player1Name : _player2Name;
+                Console.WriteLine($"\n {winnerName} WINS! ");
+                
                 SaveCompletedGame(winner.winner);
+                
+                Console.WriteLine("\nPress any key to return to menu...");
+                Console.ReadKey();
                 return "m";
             }
 
+            // Check for draw
             if (GameBrain.BoardIsFull())
             {
+                Console.Clear();
                 Ui.DrawBoard(GameBrain.GetBoard(), 0);
-                Ui.PrintGameResult(ECellState.Empty);
+                Console.WriteLine("\n DRAW! Board is full! ");
+                
                 SaveCompletedGame(ECellState.Empty);
+                
+                Console.WriteLine("\nPress any key to return to menu...");
+                Console.ReadKey();
                 return "m";
             }
         }
@@ -111,10 +159,22 @@ public class GameController
         try
         {
             var gameState = GameBrain.GetGameState();
-            _gameRepository.Save(gameState);
+            
+            if (!string.IsNullOrEmpty(_currentGameId))
+            {
+                gameState.GameId = _currentGameId;
+            }
+            
+            var gameId = _gameRepository.Save(gameState);
+            
+            Console.WriteLine("\n=============================");
+            Console.WriteLine("    GAME SAVED TO HISTORY     ");
+            Console.WriteLine("=============================");
+            Console.WriteLine($"Game ID: {gameId}");
         }
-        catch
+        catch (Exception ex)
         {
+            Console.WriteLine($"\n️  Could not save game: {ex.Message}");
         }
     }
 
@@ -122,7 +182,7 @@ public class GameController
     {
         var board = GameBrain.GetBoard();
         var config = GameBrain.GetConfiguration();
-        
+
         return aiPlayer.GetBestMove(board, isRedPlayer, config);
     }
 
@@ -130,11 +190,11 @@ public class GameController
     {
         var gameBoard = GameBrain.GetBoard();
         int selectedColumn = 0;
-        
+
         while (true)
         {
             Ui.DrawBoard(gameBoard, selectedColumn);
-            
+
             ConsoleKeyInfo keyInfo = Console.ReadKey(true);
 
             switch (keyInfo.Key)
@@ -152,27 +212,35 @@ public class GameController
             }
         }
     }
-    
+
     public string SaveGame()
     {
         var gameState = GameBrain.GetGameState();
+        
+        if (!string.IsNullOrEmpty(_currentGameId))
+        {
+            gameState.GameId = _currentGameId;
+        }
+        
         var gameId = _gameRepository.Save(gameState);
-    
+
+        _currentGameId = gameId;
+        
         Console.Clear();
-        Console.WriteLine("╔════════════════════════════╗");
-        Console.WriteLine("║      GAME SAVED!           ║");
-        Console.WriteLine("╚════════════════════════════╝");
+        Console.WriteLine("==============================");
+        Console.WriteLine("       GAME SAVED!            ");
+        Console.WriteLine("==============================");
         Console.WriteLine($"Game ID: {gameId}");
         Console.WriteLine("\nPress any key to continue...");
         Console.ReadKey();
-    
+
         return gameId;
     }
 
     private string ShowPauseMenu()
     {
         var pauseMenu = new Menu("GAME PAUSED", EMenuLevel.Pause);
-        
+
         pauseMenu.AddMenuItem("1", "Continue Game", () => "continue");
         pauseMenu.AddMenuItem("2", "Save and Exit", () =>
         {
@@ -180,24 +248,29 @@ public class GameController
             return "m";
         });
         pauseMenu.AddMenuItem("3", "Exit without Saving", () => "m");
-        
-        var result = pauseMenu.Run();
-        
-        return result;
 
+        var result = pauseMenu.Run();
+
+        return result;
     }
-    
+
     public void LoadGame(string gameId)
     {
         try
         {
             var gameState = _gameRepository.Load(gameId);
             GameBrain.LoadFromGameState(gameState);
-        
+            
+            // Update player names from loaded state
+            _player1Name = gameState.Player1Name;
+            _player2Name = gameState.Player2Name;
+            
+            _currentGameId = gameId;
+
             Console.Clear();
-            Console.WriteLine("╔════════════════════════════╗");
-            Console.WriteLine("║      GAME LOADED!          ║");
-            Console.WriteLine("╚════════════════════════════╝");
+            Console.WriteLine("==============================");
+            Console.WriteLine("       GAME LOADED!           ");
+            Console.WriteLine("==============================");
             Console.WriteLine($"Loaded: {gameState.Player1Name} vs {gameState.Player2Name}");
             Console.WriteLine($"Saved at: {gameState.SavedAt:yyyy-MM-dd HH:mm}");
             Console.WriteLine("\nPress any key to continue...");
@@ -206,9 +279,9 @@ public class GameController
         catch (FileNotFoundException ex)
         {
             Console.Clear();
-            Console.WriteLine("╔════════════════════════════╗");
-            Console.WriteLine("║      ERROR!                ║");
-            Console.WriteLine("╚════════════════════════════╝");
+            Console.WriteLine("==============================");
+            Console.WriteLine("       ERROR!                 ");
+            Console.WriteLine("==============================");
             Console.WriteLine(ex.Message);
             Console.WriteLine("\nPress any key to continue...");
             Console.ReadKey();

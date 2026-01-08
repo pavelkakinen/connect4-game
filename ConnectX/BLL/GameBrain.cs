@@ -141,6 +141,31 @@ public class GameBrain
 
         return (ECellState.Empty, null);
     }
+    
+    public (ECellState winner, List<(int row, int col)> winningCells) CheckWin()
+    {
+        // Check every non-empty cell
+        for (int row = 0; row < GameBoard.GetLength(0); row++)
+        {
+            for (int col = 0; col < GameBoard.GetLength(1); col++)
+            {
+                var cellState = GameBoard[row, col];
+            
+                if (cellState != ECellState.Empty)
+                {
+                    var result = CheckWin(row, col);
+                
+                    if (result.winner != ECellState.Empty)
+                    {
+                        return result; // Found a winner!
+                    }
+                }
+            }
+        }
+    
+        // No winner found
+        return (ECellState.Empty, new List<(int row, int col)>());
+    }
 
     public bool IsNextMoveByRed() => NextMoveByRed;
     

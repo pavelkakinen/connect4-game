@@ -13,7 +13,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 var homeDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 homeDirectory += Path.DirectorySeparatorChar;
 
-connectionString = connectionString.Replace("<db_file>", $"{homeDirectory}connectx_web.db");
+connectionString = connectionString.Replace("<db_file>", $"{homeDirectory}connectx.db");
 
 // dbcontext is using AddScoped
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -29,6 +29,8 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 // Game state repository for persisting game sessions
 // builder.Services.AddScoped<IRepository<GameState>, GameStateRepositoryEF>();
 builder.Services.AddScoped<IRepository<GameState>, GameStateRepositoryJson>();
+// builder.Services.AddScoped<IRepository<GameState>>(sp => 
+    // new GameStateRepositoryEF(sp.GetRequiredService<AppDbContext>()));
 
 builder.Services.AddRazorPages();
 

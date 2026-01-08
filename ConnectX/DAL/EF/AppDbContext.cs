@@ -11,6 +11,17 @@ public class AppDbContext : DbContext
     {
     }
     
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        if (!optionsBuilder.IsConfigured)
+        {
+            // Для миграций - используй стандартный путь
+            var homeDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            var connectionString = $"Data Source={homeDirectory}/connectx.db";
+            optionsBuilder.UseSqlite(connectionString);
+        }
+    }
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
