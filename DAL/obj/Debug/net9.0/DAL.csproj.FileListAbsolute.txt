@@ -1,0 +1,17 @@
+/Users/pavelkakinen/icd0008-25f/ConnectX/DAL/bin/Debug/net9.0/DAL.deps.json
+/Users/pavelkakinen/icd0008-25f/ConnectX/DAL/bin/Debug/net9.0/DAL.dll
+/Users/pavelkakinen/icd0008-25f/ConnectX/DAL/bin/Debug/net9.0/DAL.pdb
+/Users/pavelkakinen/icd0008-25f/ConnectX/DAL/obj/Debug/net9.0/DAL.csproj.AssemblyReference.cache
+/Users/pavelkakinen/icd0008-25f/ConnectX/DAL/obj/Debug/net9.0/DAL.GeneratedMSBuildEditorConfig.editorconfig
+/Users/pavelkakinen/icd0008-25f/ConnectX/DAL/obj/Debug/net9.0/DAL.AssemblyInfoInputs.cache
+/Users/pavelkakinen/icd0008-25f/ConnectX/DAL/obj/Debug/net9.0/DAL.AssemblyInfo.cs
+/Users/pavelkakinen/icd0008-25f/ConnectX/DAL/obj/Debug/net9.0/DAL.csproj.CoreCompileInputs.cache
+/Users/pavelkakinen/icd0008-25f/ConnectX/DAL/obj/Debug/net9.0/DAL.csproj.Up2Date
+/Users/pavelkakinen/icd0008-25f/ConnectX/DAL/obj/Debug/net9.0/DAL.dll
+/Users/pavelkakinen/icd0008-25f/ConnectX/DAL/obj/Debug/net9.0/refint/DAL.dll
+/Users/pavelkakinen/icd0008-25f/ConnectX/DAL/obj/Debug/net9.0/DAL.pdb
+/Users/pavelkakinen/icd0008-25f/ConnectX/DAL/obj/Debug/net9.0/ref/DAL.dll
+/Users/pavelkakinen/icd0008-25f/ConnectX/DAL/bin/Debug/net9.0/Domain.dll
+/Users/pavelkakinen/icd0008-25f/ConnectX/DAL/bin/Debug/net9.0/Domain.pdb
+/Users/pavelkakinen/icd0008-25f/ConnectX/DAL/bin/Debug/net9.0/DAL.runtimeconfig.json
+/Users/pavelkakinen/icd0008-25f/ConnectX/DAL/obj/Debug/net9.0/DAL.genruntimeconfig.cache
