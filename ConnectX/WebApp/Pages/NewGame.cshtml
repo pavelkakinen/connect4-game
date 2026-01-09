@@ -1,0 +1,86 @@
+@page
+@model WebApp.Pages.NewGame
+@{
+    ViewData["Title"] = "New Game";
+}
+
+<h1>Start a New Game</h1>
+
+<form method="post">
+    <div class="row">
+        <div class="col-md-6">
+            <h3>Game Configuration</h3>
+            
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            
+            <div class="form-group mb-4">
+                <label asp-for="ConfigId" class="control-label">Choose Configuration</label>
+                <select asp-for="ConfigId" class="form-select form-select-lg" asp-items="Model.ConfigurationSelectList">
+                    <option value="">-- Select Configuration --</option>
+                </select>
+                <span asp-validation-for="ConfigId" class="text-danger"></span>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <h3>Players</h3>
+            
+            <div class="card mb-3 border-danger player-card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">🔴 Player 1 (Red)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-group mb-3">
+                        <label asp-for="Player1Name" class="control-label">Name</label>
+                        <input asp-for="Player1Name" class="form-control" placeholder="Enter player 1 name" />
+                        <span asp-validation-for="Player1Name" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="form-group mb-0">
+                        <label asp-for="P1Type" class="control-label">Player Type</label>
+                        <select asp-for="P1Type" class="form-select">
+                            <option value="0">Human</option>
+                            <option value="1">Computer (AI)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mb-3 border-primary player-card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">🔵 Player 2 (Blue)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-group mb-3">
+                        <label asp-for="Player2Name" class="control-label">Name</label>
+                        <input asp-for="Player2Name" class="form-control" placeholder="Enter player 2 name" />
+                        <span asp-validation-for="Player2Name" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="form-group mb-0">
+                        <label asp-for="P2Type" class="control-label">Player Type</label>
+                        <select asp-for="P2Type" class="form-select">
+                            <option value="0">Human</option>
+                            <option value="1">Computer (AI)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12 text-center">
+            <button type="submit" class="btn btn-success btn-lg px-5">
+                Start Game
+            </button>
+            <a href="/" class="btn btn-secondary btn-lg px-5">
+                Cancel
+            </a>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

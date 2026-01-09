@@ -1,0 +1,11 @@
+/Users/pavelkakinen/icd0008-25f/ConnectX/Domain/bin/Debug/net9.0/Domain.deps.json
+/Users/pavelkakinen/icd0008-25f/ConnectX/Domain/bin/Debug/net9.0/Domain.dll
+/Users/pavelkakinen/icd0008-25f/ConnectX/Domain/bin/Debug/net9.0/Domain.pdb
+/Users/pavelkakinen/icd0008-25f/ConnectX/Domain/obj/Debug/net9.0/Domain.GeneratedMSBuildEditorConfig.editorconfig
+/Users/pavelkakinen/icd0008-25f/ConnectX/Domain/obj/Debug/net9.0/Domain.AssemblyInfoInputs.cache
+/Users/pavelkakinen/icd0008-25f/ConnectX/Domain/obj/Debug/net9.0/Domain.AssemblyInfo.cs
+/Users/pavelkakinen/icd0008-25f/ConnectX/Domain/obj/Debug/net9.0/Domain.csproj.CoreCompileInputs.cache
+/Users/pavelkakinen/icd0008-25f/ConnectX/Domain/obj/Debug/net9.0/Domain.dll
+/Users/pavelkakinen/icd0008-25f/ConnectX/Domain/obj/Debug/net9.0/refint/Domain.dll
+/Users/pavelkakinen/icd0008-25f/ConnectX/Domain/obj/Debug/net9.0/Domain.pdb
+/Users/pavelkakinen/icd0008-25f/ConnectX/Domain/obj/Debug/net9.0/ref/Domain.dll
