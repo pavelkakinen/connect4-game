@@ -179,7 +179,6 @@ else if (Model.IsGameOver && Model.GameBrain.BoardIsFull())
         function checkForUpdates() {
             const url = `?handler=CheckUpdate&gameId=${encodeURIComponent(gameId)}&lastUpdateTimestamp=${lastUpdateTimestamp}`;
             
-            console.log('Checking...');
             
             fetch(url)
                 .then(response => response.json())

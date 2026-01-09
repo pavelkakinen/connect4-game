@@ -1,0 +1,233 @@
+@page
+@using System.Web
+@using Domain
+@model WebApp.Pages.GamePlay
+
+@{
+    var currentSymbol = Model.GameBrain.NextMoveByRed ? "🔴" : "🔵";
+}
+
+<h1>ConnectX Game</h1>
+
+@if (Model.ShowPauseMenu && !Model.IsGameOver)
+{
+    <div class="pause-overlay">
+        <div class="pause-menu">
+            <h2>Game Paused</h2>
+            
+            <form method="post" asp-page-handler="SaveAndExit" class="mb-2">
+                <input type="hidden" name="gameId" value="@Model.GameId" />
+                <button type="submit" class="btn btn-success btn-lg btn-block w-100">
+                    Save and Exit to Menu
+                </button>
+            </form>
+            
+            <form method="post" asp-page-handler="DeleteAndExit" class="mb-2">
+                <input type="hidden" name="gameId" value="@Model.GameId" />
+                <button type="submit" class="btn btn-danger btn-lg btn-block w-100"
+                        onclick="return confirm('Delete this game? This cannot be undone!')">
+                    Delete Game and Exit
+                </button>
+            </form>
+            
+            <form method="post" asp-page-handler="Continue">
+                <input type="hidden" name="gameId" value="@Model.GameId" />
+                <button type="submit" class="btn btn-primary btn-lg btn-block w-100">
+                    Continue Playing
+                </button>
+            </form>
+        </div>
+    </div>
+}
+
+@if (Model.Winner == ECellState.Red || Model.Winner == ECellState.Blue)
+{
+    <div class="game-status-message winner-message">
+        <span class="winner-text">@Model.WinnerName wins!</span>
+    </div>
+}
+else if (Model.IsGameOver && Model.GameBrain.BoardIsFull())
+{
+    <div class="game-status-message draw-message">
+        <span class="draw-text">It's a draw!</span>
+    </div>
+}
+
+@if (!Model.IsGameOver && !Model.ShowPauseMenu)
+{
+    <div class="turn-indicator">
+        <span class="turn-label">Current turn:</span>
+        <span class="player-name">@Model.CurrentPlayerName</span>
+        <span class="player-symbol">@currentSymbol</span>
+        
+        <a href="?gameId=@Uri.EscapeDataString(Model.GameId)&pause=true" class="btn btn-warning btn-sm ms-3">
+            Pause
+        </a>
+    </div>
+}
+
+<div class="row">
+    <div class="col-md-10">
+        @if (Model.IsGameOver)
+        {
+            <div class="game-board-container game-board-static">
+                <table class="game-board game-over">
+                    @for (int row = 0; row < Model.GameBrain.GetBoard().GetLength(0); row++)
+                    {
+                        <tr>
+                            @for (int col = 0; col < Model.GameBrain.GetBoard().GetLength(1); col++)
+                            {
+                                var cellState = Model.GameBrain.GetBoard()[row, col];
+                                var isWinningCell = Model.WinningCells.Contains((row, col));
+                                
+                                <td class="game-cell @GetCellClass(cellState, isWinningCell)">
+                                    @GetCellRepresentation(cellState)
+                                </td>
+                            }
+                        </tr>
+                    }
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="game-board-container">
+                <div class="column-headers">
+                    @for (int col = 0; col < Model.GameBrain.GetBoard().GetLength(1); col++)
+                    {
+                        var localCol = col;
+                        @if (!Model.ShowPauseMenu)
+                        {
+                            <div class="column-header" onclick="makeMove(@localCol)">
+                                <span class="arrow-down">⬇️</span>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="column-header column-header-disabled">
+                                <span class="arrow-down">⬇️</span>
+                            </div>
+                        }
+                    }
+                </div>
+                
+                <table class="game-board">
+                    @for (int row = 0; row < Model.GameBrain.GetBoard().GetLength(0); row++)
+                    {
+                        <tr>
+                            @for (int col = 0; col < Model.GameBrain.GetBoard().GetLength(1); col++)
+                            {
+                                var cellState = Model.GameBrain.GetBoard()[row, col];
+                                var isWinningCell = Model.WinningCells.Contains((row, col));
+                                
+                                <td class="game-cell @GetCellClass(cellState, isWinningCell)">
+                                    @GetCellRepresentation(cellState)
+                                </td>
+                            }
+                        </tr>
+                    }
+                </table>
+            </div>
+        }
+    </div>
+    
+    <div class="col-md-2">
+        <div class="game-info">
+            <h4>Game Info</h4>
+            <p><strong>Board:</strong> @Model.GameConfiguration.BoardWidth x @Model.GameConfiguration.BoardHeight</p>
+            <p><strong>Win:</strong> @Model.GameConfiguration.WinCondition in a row</p>
+            <p><strong>Type:</strong> @(Model.GameConfiguration.BoardType == EBoardType.Rectangle ? "Rectangle" : "Cylinder")</p>
+            <hr />
+            <p><strong>🔴 @Model.GameBrain.GetGameState().Player1Name</strong></p>
+            <p><strong>🔵 @Model.GameBrain.GetGameState().Player2Name</strong></p>
+            
+            @if (Model.IsGameOver)
+            {
+                <hr />
+                <div class="alert alert-warning">
+                    <strong>Read Only</strong><br/>
+                    This game has ended.<br/>
+                    No moves allowed.
+                </div>
+                
+                <a href="/" class="btn btn-primary btn-lg w-100 mt-3">
+                    Back to Home
+                </a>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+    function makeMove(col) {
+        window.location.href = "?gameId=@Uri.EscapeDataString(Model.GameId)&col=" + col;
+    }
+</script>
+
+@if (!Model.IsGameOver && !Model.ShowPauseMenu)
+{
+    <script>
+        console.log('Multiplayer polling started');
+        
+        const gameId = "@Model.GameId";
+        const savedAtStr = "@Model.GameBrain.GetGameState().SavedAt.ToString("o")";
+        let lastUpdateTimestamp = Math.floor(new Date(savedAtStr).getTime() / 1000);
+        
+        console.log('Game ID:', gameId);
+        console.log('Initial timestamp:', lastUpdateTimestamp);
+        
+        function checkForUpdates() {
+            const url = `?handler=CheckUpdate&gameId=${encodeURIComponent(gameId)}&lastUpdateTimestamp=${lastUpdateTimestamp}`;
+            
+            console.log('Checking...');
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Response:', data);
+                    
+                    if (data.updated) {
+                        console.log('✅ UPDATE DETECTED! Reloading with gameId...');
+                        // Redirect with saving gameId
+                        window.location.href = `?gameId=${encodeURIComponent(gameId)}`;
+                    } else {
+                        console.log('❌ No updates');
+                    }
+                    
+                    if (data.timestamp) {
+                        lastUpdateTimestamp = data.timestamp;
+                    }
+                })
+                .catch(error => console.error('❌ Error:', error));
+        }
+        
+        // Check every 3 seconds
+        const interval = setInterval(checkForUpdates, 3000);
+        console.log('✅ Polling interval started');
+        
+        window.addEventListener('beforeunload', () => {
+            clearInterval(interval);
+        });
+    </script>
+}
+
+@functions
+{
+    private static string GetCellClass(ECellState cellState, bool isWinning) =>
+        cellState switch
+        {
+            ECellState.Empty => "cell-empty",
+            ECellState.Red => isWinning ? "cell-red cell-win" : "cell-red",
+            ECellState.Blue => isWinning ? "cell-blue cell-win" : "cell-blue",
+            _ => ""
+        };
+
+    private static string GetCellRepresentation(ECellState cellValue) =>
+        cellValue switch
+        {
+            ECellState.Empty => "",
+            ECellState.Red => "🔴",
+            ECellState.Blue => "🔵",
+            _ => "?"
+        };
+}

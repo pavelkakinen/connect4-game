@@ -5,6 +5,7 @@ namespace BLL;
 
 public class GameBrain
 {
+    
     private ECellState[,] GameBoard { get; set; }
     public bool NextMoveByRed { get; private set; } = true;
     private GameConfiguration GameConfiguration { get; set; }

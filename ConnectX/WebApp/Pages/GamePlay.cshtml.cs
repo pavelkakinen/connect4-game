@@ -45,7 +45,6 @@ public class GamePlay : PageModel
 {
     ShowPauseMenu = pause;
     
-    // Try to restore from saved state if gameId is provided
     if (!string.IsNullOrEmpty(gameId))
     {
         try
@@ -83,7 +82,7 @@ public class GamePlay : PageModel
         }
         catch (Exception)
         {
-            // State not found or invalid
+            //  invalid
         }
     }
     
@@ -158,7 +157,6 @@ public class GamePlay : PageModel
         }
         catch
         {
-            // Ignore errors
         }
         
         return RedirectToPage("./Index");
@@ -287,41 +285,5 @@ public class GamePlay : PageModel
         }
     }
     
-    public IActionResult OnPostPlayAgain(string gameId)
-    {
-        if (string.IsNullOrEmpty(gameId))
-        {
-            return RedirectToPage("./NewGame");
-        }
-        
-        try
-        {
-            var existingState = _gameStateRepo.Load(gameId);
-            
-            var config = new GameConfiguration
-            {
-                BoardWidth = existingState.BoardWidth,
-                BoardHeight = existingState.BoardHeight,
-                WinCondition = existingState.WinCond,
-                BoardType = existingState.BoardType
-            };
-            
-            config.SetP1Type((EPlayerType)existingState.P1Type);
-            config.SetP2Type((EPlayerType)existingState.P2Type);
-            
-            var newBrain = new GameBrain(config, existingState.Player1Name, existingState.Player2Name);
-            
-            var newState = newBrain.GetGameState();
-            newState.P1Type = existingState.P1Type;
-            newState.P2Type = existingState.P2Type;
-            
-            var newGameId = _gameStateRepo.Save(newState);
-            
-            return RedirectToPage("./GamePlay", new { gameId = newGameId });
-        }
-        catch (Exception)
-        {
-            return RedirectToPage("./NewGame");
-        }
-    }
+    
 }

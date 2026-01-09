@@ -94,10 +94,10 @@ public class NewGame : PageModel
         // Redirect to gameplay
         return RedirectToPage("./GamePlay", new
         {
-            boardWidth = boardWidth,
-            boardHeight = boardHeight,
-            winCondition = winCondition,
-            boardType = boardType,
+            boardWidth,
+            boardHeight,
+            winCondition,
+            boardType,
             player1Name = Player1Name,
             player2Name = Player2Name,
             p1Type = P1Type,
