@@ -73,7 +73,6 @@ public class IndexModel : PageModel
         var gameBrain = new GameBrain(config, gameState.Player1Name, gameState.Player2Name);
         gameBrain.LoadFromGameState(gameState);
         
-        // Check if board is full
         if (gameBrain.BoardIsFull())
             return true;
         

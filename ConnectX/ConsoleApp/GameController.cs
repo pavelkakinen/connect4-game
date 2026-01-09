@@ -44,7 +44,7 @@ public class GameController
     {
         while (true)
         {
-            // ========== CHECK IF GAME IS ALREADY OVER ==========
+            // check if game already over
             var (currentWinner, currentWinningCells) = GameBrain.CheckWin();
             if (currentWinner != ECellState.Empty || GameBrain.BoardIsFull())
             {
@@ -71,7 +71,6 @@ public class GameController
                 Console.ReadKey();
                 return "m";
             }
-            // ===================================================
             
             int columnChoice;
             bool isRedTurn = GameBrain.NextMoveByRed;
@@ -98,7 +97,7 @@ public class GameController
                 {
                     var pauseAction = ShowPauseMenu();
                     if (pauseAction == "continue") continue;
-                    else if (pauseAction == "m") return "m";
+                    if (pauseAction == "m") return "m";
                 }
             }
 
@@ -129,7 +128,7 @@ public class GameController
                 Ui.DrawWinningBoard(GameBrain.GetBoard(), winner.winner, winner.winningCells);
                 
                 var winnerName = winner.winner == ECellState.Red ? _player1Name : _player2Name;
-                Console.WriteLine($"\n {winnerName} WINS! ");
+                Ui.PrintGameResult(winner.winner, winnerName);
                 
                 SaveCompletedGame(winner.winner);
                 
@@ -213,7 +212,7 @@ public class GameController
         }
     }
 
-    public string SaveGame()
+    private string SaveGame()
     {
         var gameState = GameBrain.GetGameState();
         

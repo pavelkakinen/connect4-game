@@ -55,7 +55,6 @@ public class NewGame : PageModel
             return Page();
         }
         
-        // Parse configuration
         int boardWidth, boardHeight, winCondition, boardType;
         
         switch (ConfigId.ToLower())

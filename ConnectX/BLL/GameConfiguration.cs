@@ -64,11 +64,6 @@ public class GameConfiguration
         P2Type = p2Type;
     }
 
-    public void SetBoardType(EBoardType boardType)
-    {
-        BoardType = boardType;
-    }
-
     public override string ToString()
     {
         return $"{Name}: {BoardWidth}x{BoardHeight}, Win: {WinCondition}, Type: {BoardType}, P1: {P1Type},  P2: {P2Type}";

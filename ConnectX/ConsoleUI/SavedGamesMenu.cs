@@ -5,16 +5,9 @@ using MenuSystem;
 
 namespace ConsoleUI;
 
-/// <summary>
-/// UI for saved games operations (Load, Delete, Edit)
-/// </summary>
+
 public static class SavedGamesMenu
 {
-    /// <summary>
-    /// Show list of saved games and allow loading
-    /// </summary>
-    /// <param name="repository">Game repository</param>
-    /// <param name="loadAndStartGame">Function to create controller and start game</param>
     public static string ShowLoadMenu(
         IRepository<GameState> repository,
         Func<GameConfiguration, string, string> loadAndStartGame)
@@ -51,9 +44,6 @@ public static class SavedGamesMenu
         return loadMenu.Run();
     }
     
-    /// <summary>
-    /// Show list of saved games and allow deleting
-    /// </summary>
     public static string ShowDeleteMenu(IRepository<GameState> repository)
     {
         var savedGames = repository.List();
@@ -78,9 +68,6 @@ public static class SavedGamesMenu
         return deleteMenu.Run();
     }
     
-    /// <summary>
-    /// Show list of saved games and allow editing
-    /// </summary>
     public static string ShowEditMenu(IRepository<GameState> repository)
     {
         var savedGames = repository.List();
@@ -110,9 +97,9 @@ public static class SavedGamesMenu
     private static void ShowNoGamesMessage()
     {
         Console.Clear();
-        Console.WriteLine("╔════════════════════════════╗");
-        Console.WriteLine("║   NO SAVED GAMES FOUND     ║");
-        Console.WriteLine("╚════════════════════════════╝");
+        Console.WriteLine("==============================");
+        Console.WriteLine("    NO SAVED GAMES FOUND      ");
+        Console.WriteLine("==============================");
         Console.WriteLine("\nPress any key to continue...");
         Console.ReadKey();
     }
@@ -122,9 +109,9 @@ public static class SavedGamesMenu
         (string id, string description) game)
     {
         Console.Clear();
-        Console.WriteLine("╔════════════════════════════╗");
-        Console.WriteLine("║      CONFIRM DELETE        ║");
-        Console.WriteLine("╚════════════════════════════╝");
+        Console.WriteLine("==============================");
+        Console.WriteLine("       CONFIRM DELETE         ");
+        Console.WriteLine("==============================");
         Console.WriteLine();
         Console.WriteLine($"Game: {game.description}");
         Console.WriteLine($"ID: {game.id}");
@@ -138,9 +125,9 @@ public static class SavedGamesMenu
         {
             repository.Delete(game.id);
             Console.WriteLine();
-            Console.WriteLine("╔════════════════════════════╗");
-            Console.WriteLine("║     GAME DELETED!          ║");
-            Console.WriteLine("╚════════════════════════════╝");
+            Console.WriteLine("==============================");
+            Console.WriteLine("      GAME DELETED!           ");
+            Console.WriteLine("==============================");
         }
         else
         {
@@ -158,9 +145,9 @@ public static class SavedGamesMenu
         var gameState = repository.Load(gameId);
         
         Console.Clear();
-        Console.WriteLine("╔════════════════════════════╗");
-        Console.WriteLine("║      EDIT GAME INFO        ║");
-        Console.WriteLine("╚════════════════════════════╝");
+        Console.WriteLine("==============================");
+        Console.WriteLine("       EDIT GAME INFO         ");
+        Console.WriteLine("==============================");
         Console.WriteLine();
         
         Console.WriteLine($"Current Player 1: {gameState.Player1Name}");
@@ -183,9 +170,9 @@ public static class SavedGamesMenu
         repository.Save(gameState);
         
         Console.WriteLine();
-        Console.WriteLine("╔════════════════════════════╗");
-        Console.WriteLine("║     GAME UPDATED!          ║");
-        Console.WriteLine("╚════════════════════════════╝");
+        Console.WriteLine("==============================");
+        Console.WriteLine("      GAME UPDATED!           ");
+        Console.WriteLine("==============================");
         Console.WriteLine("\nPress any key to continue...");
         Console.ReadKey();
         

@@ -9,12 +9,11 @@
 
 <h1>ConnectX Game</h1>
 
-@* PAUSE MENU MODAL *@
 @if (Model.ShowPauseMenu && !Model.IsGameOver)
 {
     <div class="pause-overlay">
         <div class="pause-menu">
-            <h2>⏸ Game Paused</h2>
+            <h2>Game Paused</h2>
             
             <form method="post" asp-page-handler="SaveAndExit" class="mb-2">
                 <input type="hidden" name="gameId" value="@Model.GameId" />
@@ -71,7 +70,6 @@ else if (Model.IsGameOver && Model.GameBrain.BoardIsFull())
     <div class="col-md-10">
         @if (Model.IsGameOver)
         {
-            @* STATIC BOARD - NO CLICKS - БЕЗ НАДПИСИ *@
             <div class="game-board-container game-board-static">
                 <table class="game-board game-over">
                     @for (int row = 0; row < Model.GameBrain.GetBoard().GetLength(0); row++)
@@ -93,7 +91,6 @@ else if (Model.IsGameOver && Model.GameBrain.BoardIsFull())
         }
         else
         {
-            @* INTERACTIVE BOARD - WITH CLICKS *@
             <div class="game-board-container">
                 <div class="column-headers">
                     @for (int col = 0; col < Model.GameBrain.GetBoard().GetLength(1); col++)
@@ -166,6 +163,53 @@ else if (Model.IsGameOver && Model.GameBrain.BoardIsFull())
         window.location.href = "?gameId=@Uri.EscapeDataString(Model.GameId)&col=" + col;
     }
 </script>
+
+@if (!Model.IsGameOver && !Model.ShowPauseMenu)
+{
+    <script>
+        console.log('Multiplayer polling started');
+        
+        const gameId = "@Model.GameId";
+        const savedAtStr = "@Model.GameBrain.GetGameState().SavedAt.ToString("o")";
+        let lastUpdateTimestamp = Math.floor(new Date(savedAtStr).getTime() / 1000);
+        
+        console.log('Game ID:', gameId);
+        console.log('Initial timestamp:', lastUpdateTimestamp);
+        
+        function checkForUpdates() {
+            const url = `?handler=CheckUpdate&gameId=${encodeURIComponent(gameId)}&lastUpdateTimestamp=${lastUpdateTimestamp}`;
+            
+            console.log('Checking...');
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Response:', data);
+                    
+                    if (data.updated) {
+                        console.log('✅ UPDATE DETECTED! Reloading with gameId...');
+                        // Redirect with saving gameId
+                        window.location.href = `?gameId=${encodeURIComponent(gameId)}`;
+                    } else {
+                        console.log('❌ No updates');
+                    }
+                    
+                    if (data.timestamp) {
+                        lastUpdateTimestamp = data.timestamp;
+                    }
+                })
+                .catch(error => console.error('❌ Error:', error));
+        }
+        
+        // Check every 3 seconds
+        const interval = setInterval(checkForUpdates, 3000);
+        console.log('✅ Polling interval started');
+        
+        window.addEventListener('beforeunload', () => {
+            clearInterval(interval);
+        });
+    </script>
+}
 
 @functions
 {

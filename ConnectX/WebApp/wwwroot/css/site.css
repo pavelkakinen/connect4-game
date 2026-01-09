@@ -319,8 +319,8 @@ body {
 
 .game-board-static {
   position: relative;
-  pointer-events: none;  /* ПОЛНАЯ БЛОКИРОВКА КЛИКОВ */
-  user-select: none;     /* Нельзя выделить */
+  pointer-events: none;  /* block clicks */
+  user-select: none;     
 }
 
 .static-board-overlay {
@@ -355,7 +355,7 @@ body {
   right: 0;
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.05);
-  pointer-events: all;  /* Перехватывает ВСЕ клики */
+  pointer-events: all;  /* all clicks */
   cursor: not-allowed;
   border-radius: 10px;
 }

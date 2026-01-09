@@ -6,7 +6,6 @@ public static class FilesystemHelpers
     
     private static string GetAppDirectory()
     {
-        // Используй папку пользователя вместо относительного пути
         var homeDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         var appDirectory = Path.Combine(homeDirectory, AppName);
         

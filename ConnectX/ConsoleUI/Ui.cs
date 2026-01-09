@@ -1,7 +1,4 @@
 ﻿using Domain;
-using DAL;
-using BLL;
-using MenuSystem;
 
 namespace ConsoleUI;
 
@@ -30,6 +27,7 @@ public static class Ui
             }
             Console.WriteLine();
         }
+        
     }
 
     public static void DrawWinningBoard(
@@ -56,7 +54,7 @@ public static class Ui
         }
     }
 
-    public static void PrintGameResult(ECellState winner)
+    public static void PrintGameResult(ECellState winner, string winnerName)
     {
         if (winner == ECellState.Empty)
         {
@@ -66,12 +64,12 @@ public static class Ui
         } else if (winner.Equals(ECellState.Red))
         {
             Console.WriteLine("====================");
-            Console.WriteLine("   🔴 RED WINS");
+            Console.WriteLine($"    {winnerName} WINS 🔴");
             Console.WriteLine("====================");
         } else if (winner.Equals(ECellState.Blue))
         {
             Console.WriteLine("====================");
-            Console.WriteLine("   🔵 BLUE WINS");
+            Console.WriteLine($"    {winnerName} WINS 🔵");
             Console.WriteLine("====================");
         }
         Console.WriteLine();
@@ -94,9 +92,9 @@ public static class Ui
     public static (string player1Name, string player2Name) GetPlayerNames(bool isVsComputer)
     {
         Console.Clear();
-        Console.WriteLine("╔════════════════════════════╗");
-        Console.WriteLine("║    ENTER PLAYER NAMES      ║");
-        Console.WriteLine("╚════════════════════════════╝");
+        Console.WriteLine("==============================");
+        Console.WriteLine("     ENTER PLAYER NAMES       ");
+        Console.WriteLine("==============================");
         Console.WriteLine();
     
         Console.Write("Player 1 (Red 🔴) name: ");

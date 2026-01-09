@@ -15,7 +15,7 @@ public class AppDbContext : DbContext
     {
         if (!optionsBuilder.IsConfigured)
         {
-            // Для миграций - используй стандартный путь
+            // for migration only
             var homeDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             var connectionString = $"Data Source={homeDirectory}/connectx.db";
             optionsBuilder.UseSqlite(connectionString);
@@ -52,7 +52,7 @@ public class AppDbContext : DbContext
                 .IsRequired()
                 .HasMaxLength(50);
             
-            // Board как JSON строка
+            // Board as JSON string
             entity.Property(e => e.Board)
                 .HasConversion(
                     v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),

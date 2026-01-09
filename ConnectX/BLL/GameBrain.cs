@@ -167,8 +167,6 @@ public class GameBrain
         return (ECellState.Empty, new List<(int row, int col)>());
     }
 
-    public bool IsNextMoveByRed() => NextMoveByRed;
-    
     public GameState GetGameState() =>
     new GameState()
     {

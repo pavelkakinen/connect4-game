@@ -31,108 +31,99 @@ public class GamePlay : PageModel
     private IAIPlayer? _aiPlayer2;
     
     public IActionResult OnGet(
-        string? gameId,
-        int? boardWidth,
-        int? boardHeight,
-        int? winCondition,
-        int? boardType,
-        string? player1Name,
-        string? player2Name,
-        int? p1Type,
-        int? p2Type,
-        int? col,
-        bool pause = false)
+    string? gameId,
+    int? boardWidth,
+    int? boardHeight,
+    int? winCondition,
+    int? boardType,
+    string? player1Name,
+    string? player2Name,
+    int? p1Type,
+    int? p2Type,
+    int? col,
+    bool pause = false)
+{
+    ShowPauseMenu = pause;
+    
+    // Try to restore from saved state if gameId is provided
+    if (!string.IsNullOrEmpty(gameId))
     {
-        ShowPauseMenu = pause;
-        
-        // Try to restore from saved state if gameId is provided
-        if (!string.IsNullOrEmpty(gameId))
+        try
         {
-            try
-            {
-                var savedState = _gameStateRepo.Load(gameId);
-                
-                GameConfiguration = new GameConfiguration
-                {
-                    BoardWidth = savedState.BoardWidth,
-                    BoardHeight = savedState.BoardHeight,
-                    WinCondition = savedState.WinCond,
-                    BoardType = savedState.BoardType
-                };
-                
-                GameConfiguration.SetP1Type((EPlayerType)savedState.P1Type);
-                GameConfiguration.SetP2Type((EPlayerType)savedState.P2Type);
-                
-                GameBrain = new GameBrain(GameConfiguration, savedState.Player1Name, savedState.Player2Name);
-                GameBrain.LoadFromGameState(savedState);
-                
-                GameId = gameId;
-                
-                InitializeAI();
-                
-                // ========== ПРОВЕРЬ ПОБЕДУ СРАЗУ ПОСЛЕ ЗАГРУЗКИ! ==========
-                CheckForWinner();
-                // =========================================================
-                
-                // Process move if column provided and game not over and not paused
-                if (col.HasValue && !IsGameOver && !pause)
-                {
-                    ProcessPlayerMove(col.Value);
-                    ProcessAIMoves();
-                    SaveGameState();
-                }
-                
-                PopulateViewProperties();
-                return Page();
-            }
-            catch (Exception)
-            {
-                // State not found or invalid
-            }
-        }
-        
-        // Create new game if we have configuration info
-        if (boardWidth.HasValue && boardHeight.HasValue && winCondition.HasValue &&
-            !string.IsNullOrEmpty(player1Name) && !string.IsNullOrEmpty(player2Name))
-        {
+            var savedState = _gameStateRepo.Load(gameId);
+            
             GameConfiguration = new GameConfiguration
             {
-                BoardWidth = boardWidth.Value,
-                BoardHeight = boardHeight.Value,
-                WinCondition = winCondition.Value,
-                BoardType = (EBoardType)(boardType ?? 0)
+                BoardWidth = savedState.BoardWidth,
+                BoardHeight = savedState.BoardHeight,
+                WinCondition = savedState.WinCond,
+                BoardType = savedState.BoardType
             };
             
-            GameConfiguration.SetP1Type((EPlayerType)(p1Type ?? 0));
-            GameConfiguration.SetP2Type((EPlayerType)(p2Type ?? 0));
+            GameConfiguration.SetP1Type((EPlayerType)savedState.P1Type);
+            GameConfiguration.SetP2Type((EPlayerType)savedState.P2Type);
             
-            GameBrain = new GameBrain(GameConfiguration, player1Name, player2Name);
+            GameBrain = new GameBrain(GameConfiguration, savedState.Player1Name, savedState.Player2Name);
+            GameBrain.LoadFromGameState(savedState);
+            
+            GameId = gameId;
             
             InitializeAI();
-            ProcessAIMoves();
+            CheckForWinner();
             
-            var initialState = GameBrain.GetGameState();
-            initialState.P1Type = (int)GameConfiguration.P1Type;
-            initialState.P2Type = (int)GameConfiguration.P2Type;
-            
-            GameId = _gameStateRepo.Save(initialState);
+            if (col.HasValue && !IsGameOver && !pause)
+            {
+                ProcessPlayerMove(col.Value);
+                ProcessAIMoves();
+                SaveGameState();
+            }
             
             PopulateViewProperties();
             return Page();
         }
-        
-        return RedirectToPage("./NewGame");
+        catch (Exception)
+        {
+            // State not found or invalid
+        }
     }
     
-    // ========== НОВЫЙ МЕТОД! ==========
-    /// <summary>
-    /// Check if there's already a winner on the board
-    /// </summary>
+    // Create new game if we have configuration info
+    if (boardWidth.HasValue && boardHeight.HasValue && winCondition.HasValue &&
+        !string.IsNullOrEmpty(player1Name) && !string.IsNullOrEmpty(player2Name))
+    {
+        GameConfiguration = new GameConfiguration
+        {
+            BoardWidth = boardWidth.Value,
+            BoardHeight = boardHeight.Value,
+            WinCondition = winCondition.Value,
+            BoardType = (EBoardType)(boardType ?? 0)
+        };
+        
+        GameConfiguration.SetP1Type((EPlayerType)(p1Type ?? 0));
+        GameConfiguration.SetP2Type((EPlayerType)(p2Type ?? 0));
+        
+        GameBrain = new GameBrain(GameConfiguration, player1Name, player2Name);
+        
+        InitializeAI();
+        ProcessAIMoves();
+        
+        var initialState = GameBrain.GetGameState();
+        initialState.P1Type = (int)GameConfiguration.P1Type;
+        initialState.P2Type = (int)GameConfiguration.P2Type;
+        
+        GameId = _gameStateRepo.Save(initialState);
+        
+        PopulateViewProperties();
+        return Page();
+    }
+    
+    return RedirectToPage("./NewGame");
+}
+    
     private void CheckForWinner()
     {
         var board = GameBrain.GetBoard();
         
-        // Check every cell for potential winner
         for (int row = 0; row < board.GetLength(0); row++)
         {
             for (int col = 0; col < board.GetLength(1); col++)
@@ -147,17 +138,15 @@ public class GamePlay : PageModel
                     {
                         Winner = winCheck.winner;
                         WinningCells = winCheck.winningCells;
-                        return; // Found winner, stop checking
+                        return;
                     }
                 }
             }
         }
     }
-    // ================================
     
     public IActionResult OnPostSaveAndExit(string gameId)
     {
-        // Game is already saved, just redirect to home
         return RedirectToPage("./Index");
     }
     
@@ -250,7 +239,35 @@ public class GamePlay : PageModel
         state.GameId = GameId;
         state.P1Type = (int)GameConfiguration.P1Type;
         state.P2Type = (int)GameConfiguration.P2Type;
+    
+        Console.WriteLine($"BEFORE SAVE: {state.GameId} at {state.SavedAt:HH:mm:ss.fff}");
+    
         _gameStateRepo.Save(state);
+    
+        Console.WriteLine($"AFTER SAVE: {state.GameId}");
+    }
+
+    public IActionResult OnGetCheckUpdate(string gameId, long lastUpdateTimestamp)
+    {
+        try
+        {
+            var currentState = _gameStateRepo.Load(gameId);
+            var serverTimestamp = new DateTimeOffset(currentState.SavedAt).ToUnixTimeSeconds();
+            bool hasUpdate = serverTimestamp > lastUpdateTimestamp;
+        
+            Console.WriteLine($"CHECK: client={lastUpdateTimestamp}, server={serverTimestamp}, updated={hasUpdate}");
+        
+            return new JsonResult(new
+            {
+                updated = hasUpdate,
+                timestamp = serverTimestamp
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"CHECK ERROR: {ex.Message}");
+            return new JsonResult(new { updated = false });
+        }
     }
     
     private void PopulateViewProperties()

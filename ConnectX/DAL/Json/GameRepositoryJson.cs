@@ -49,10 +49,10 @@ public class GameStateRepositoryJson : IRepository<GameState>
             data.GameId = GenerateGameId();
         }
         
-        data.SavedAt = DateTime.Now;
+        Console.WriteLine($" JSON SAVE: {data.GameId} at {data.SavedAt:HH:mm:ss.fff}");
+        
         
         var jsonStr = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
-        // TODO: sanitize data.GameId (как у учителя)
         var fileName = $"{data.GameId}.json";
         var fullFileName = FilesystemHelpers.GetGamesDirectory() + Path.DirectorySeparatorChar + fileName;
         
