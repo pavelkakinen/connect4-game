@@ -11,11 +11,12 @@ public class AppDbContext : DbContext
     {
     }
     
+    // for migration only
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         if (!optionsBuilder.IsConfigured)
         {
-            // for migration only
+            
             var homeDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             var connectionString = $"Data Source={homeDirectory}/connectx.db";
             optionsBuilder.UseSqlite(connectionString);
