@@ -1,0 +1,17 @@
+/Users/pavelkakinen/icd0008-25f/ConnectX/BLL/bin/Debug/net9.0/BLL.deps.json
+/Users/pavelkakinen/icd0008-25f/ConnectX/BLL/bin/Debug/net9.0/BLL.dll
+/Users/pavelkakinen/icd0008-25f/ConnectX/BLL/bin/Debug/net9.0/BLL.pdb
+/Users/pavelkakinen/icd0008-25f/ConnectX/BLL/obj/Debug/net9.0/BLL.GeneratedMSBuildEditorConfig.editorconfig
+/Users/pavelkakinen/icd0008-25f/ConnectX/BLL/obj/Debug/net9.0/BLL.AssemblyInfoInputs.cache
+/Users/pavelkakinen/icd0008-25f/ConnectX/BLL/obj/Debug/net9.0/BLL.AssemblyInfo.cs
+/Users/pavelkakinen/icd0008-25f/ConnectX/BLL/obj/Debug/net9.0/BLL.csproj.CoreCompileInputs.cache
+/Users/pavelkakinen/icd0008-25f/ConnectX/BLL/obj/Debug/net9.0/BLL.dll
+/Users/pavelkakinen/icd0008-25f/ConnectX/BLL/obj/Debug/net9.0/refint/BLL.dll
+/Users/pavelkakinen/icd0008-25f/ConnectX/BLL/obj/Debug/net9.0/BLL.pdb
+/Users/pavelkakinen/icd0008-25f/ConnectX/BLL/obj/Debug/net9.0/ref/BLL.dll
+/Users/pavelkakinen/icd0008-25f/ConnectX/BLL/bin/Debug/net9.0/Domain.dll
+/Users/pavelkakinen/icd0008-25f/ConnectX/BLL/bin/Debug/net9.0/Domain.pdb
+/Users/pavelkakinen/icd0008-25f/ConnectX/BLL/obj/Debug/net9.0/BLL.csproj.AssemblyReference.cache
+/Users/pavelkakinen/icd0008-25f/ConnectX/BLL/obj/Debug/net9.0/BLL.csproj.Up2Date
+/Users/pavelkakinen/icd0008-25f/ConnectX/BLL/bin/Debug/net9.0/DAL.dll
+/Users/pavelkakinen/icd0008-25f/ConnectX/BLL/bin/Debug/net9.0/DAL.pdb
