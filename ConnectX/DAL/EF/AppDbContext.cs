@@ -52,6 +52,12 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Player2Name)
                 .IsRequired()
                 .HasMaxLength(50);
+
+            entity.Property(e => e.P1Type)
+                .IsRequired();
+
+            entity.Property(e => e.P2Type)
+                .IsRequired();
             
             // Board as JSON string
             entity.Property(e => e.Board)

@@ -180,7 +180,9 @@ public class GameBrain
         Player1Name = Player1Name,
         Player2Name = Player2Name,
         IsNextMoveByRed = NextMoveByRed,
-        Board = ConvertBoardToList()
+        Board = ConvertBoardToList(),
+        P1Type = (int)GameConfiguration.P1Type,
+        P2Type = (int)GameConfiguration.P2Type
     };
     
     
@@ -212,6 +214,8 @@ public class GameBrain
         }
         
         NextMoveByRed = state.IsNextMoveByRed;
+        GameConfiguration.SetP1Type((EPlayerType)state.P1Type);
+        GameConfiguration.SetP2Type((EPlayerType)state.P2Type);
     }
 
 }

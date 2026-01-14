@@ -264,6 +264,17 @@ public class GameController
             _player1Name = gameState.Player1Name;
             _player2Name = gameState.Player2Name;
             
+            var config = GameBrain.GetConfiguration();
+
+            _aiPlayer1 = config.P1Type == EPlayerType.Computer
+                ? new MinimaxAI(maxDepth: 6)
+                : null;
+            
+            _aiPlayer2 = config.P2Type == EPlayerType.Computer
+                ? new MinimaxAI(maxDepth: 6)
+                : null;
+
+            
             _currentGameId = gameId;
 
             Console.Clear();

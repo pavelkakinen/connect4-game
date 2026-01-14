@@ -13,7 +13,7 @@ using Microsoft.EntityFrameworkCore;
 var config = GameConfiguration.Classic();
 
 // ================ DB STAFF =================
-bool useDatabase = true;
+bool useDatabase = false;
 
 IRepository<GameState> gameRepository;
 

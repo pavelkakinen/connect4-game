@@ -28,9 +28,9 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 // choose one: either EF based or file system based repo
 // Game state repository for persisting game sessions
 // builder.Services.AddScoped<IRepository<GameState>, GameStateRepositoryEF>();
-// builder.Services.AddScoped<IRepository<GameState>, GameStateRepositoryJson>();
-builder.Services.AddScoped<IRepository<GameState>>(sp => 
-    new GameStateRepositoryEF(sp.GetRequiredService<AppDbContext>()));
+builder.Services.AddScoped<IRepository<GameState>, GameStateRepositoryJson>();
+// builder.Services.AddScoped<IRepository<GameState>>(sp => 
+    // new GameStateRepositoryEF(sp.GetRequiredService<AppDbContext>()));
 
 builder.Services.AddRazorPages();
 
