@@ -1,0 +1,106 @@
+@page "{id:int}"
+@model WebApp.Pages.Admin.Studios.EditModel
+@{
+    ViewData["Title"] = "Edit Studio";
+}
+
+<h1>Edit Studio</h1>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    <input type="hidden" asp-for="Input.Id" />
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Input.Name" class="form-label"></label>
+                        <input asp-for="Input.Name" class="form-control" />
+                        <span asp-validation-for="Input.Name" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Input.Description" class="form-label"></label>
+                        <textarea asp-for="Input.Description" class="form-control" rows="2"></textarea>
+                        <span asp-validation-for="Input.Description" class="text-danger"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Input.SizeSquareMeters" class="form-label"></label>
+                            <div class="input-group">
+                                <input asp-for="Input.SizeSquareMeters" class="form-control" type="number" min="10" max="1000" />
+                                <span class="input-group-text">m²</span>
+                            </div>
+                            <span asp-validation-for="Input.SizeSquareMeters" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Input.MaxCapacity" class="form-label"></label>
+                            <div class="input-group">
+                                <input asp-for="Input.MaxCapacity" class="form-control" type="number" min="1" max="100" />
+                                <span class="input-group-text">students</span>
+                            </div>
+                            <span asp-validation-for="Input.MaxCapacity" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Special Equipment</label>
+                        <div class="form-check">
+                            <input asp-for="Input.HasPoles" class="form-check-input" />
+                            <label asp-for="Input.HasPoles" class="form-check-label"></label>
+                            <small class="text-muted d-block">Required for Pole Fitness classes</small>
+                        </div>
+                        <div class="form-check mt-2">
+                            <input asp-for="Input.HasAerialRigging" class="form-check-input" />
+                            <label asp-for="Input.HasAerialRigging" class="form-check-label"></label>
+                            <small class="text-muted d-block">Required for Aerial Silks classes</small>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                        <a asp-page="Index" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Usage Statistics</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-6">Scheduled classes</dt>
+                    <dd class="col-sm-6">
+                        @if (Model.ClassCount > 0)
+                        {
+                            <span class="badge bg-primary">@Model.ClassCount</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted">None</span>
+                        }
+                    </dd>
+                </dl>
+
+                @if (Model.ClassCount > 0)
+                {
+                    <hr />
+                    <div class="alert alert-info mb-0">
+                        <small>This studio has scheduled classes and cannot be deleted.</small>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

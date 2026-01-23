@@ -10,6 +10,9 @@ public class Studio
     [MaxLength(50)]
     public string Name { get; set; } = default!;
 
+    [MaxLength(500)]
+    public string? Description { get; set; }
+
     public int SizeSquareMeters { get; set; }
 
     public bool HasPoles { get; set; }

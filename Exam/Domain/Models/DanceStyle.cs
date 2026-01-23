@@ -10,6 +10,9 @@ public class DanceStyle
     [MaxLength(50)]
     public string Name { get; set; } = default!;
 
+    [MaxLength(500)]
+    public string? Description { get; set; }
+
     public ICollection<DanceClass> DanceClasses { get; set; } = new List<DanceClass>();
     public ICollection<Package> Packages { get; set; } = new List<Package>();
     public ICollection<TrialUsage> TrialUsages { get; set; } = new List<TrialUsage>();

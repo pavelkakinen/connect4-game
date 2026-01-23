@@ -1,0 +1,75 @@
+@page
+@model WebApp.Pages.Admin.Studios.CreateModel
+@{
+    ViewData["Title"] = "Add Studio";
+}
+
+<h1>Add Studio</h1>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Input.Name" class="form-label"></label>
+                        <input asp-for="Input.Name" class="form-control" placeholder="Studio name" />
+                        <span asp-validation-for="Input.Name" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Input.Description" class="form-label"></label>
+                        <textarea asp-for="Input.Description" class="form-control" rows="2"
+                                  placeholder="Optional description"></textarea>
+                        <span asp-validation-for="Input.Description" class="text-danger"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Input.SizeSquareMeters" class="form-label"></label>
+                            <div class="input-group">
+                                <input asp-for="Input.SizeSquareMeters" class="form-control" type="number" min="10" max="1000" />
+                                <span class="input-group-text">m²</span>
+                            </div>
+                            <span asp-validation-for="Input.SizeSquareMeters" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Input.MaxCapacity" class="form-label"></label>
+                            <div class="input-group">
+                                <input asp-for="Input.MaxCapacity" class="form-control" type="number" min="1" max="100" />
+                                <span class="input-group-text">students</span>
+                            </div>
+                            <span asp-validation-for="Input.MaxCapacity" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Special Equipment</label>
+                        <div class="form-check">
+                            <input asp-for="Input.HasPoles" class="form-check-input" />
+                            <label asp-for="Input.HasPoles" class="form-check-label"></label>
+                            <small class="text-muted d-block">Required for Pole Fitness classes</small>
+                        </div>
+                        <div class="form-check mt-2">
+                            <input asp-for="Input.HasAerialRigging" class="form-check-input" />
+                            <label asp-for="Input.HasAerialRigging" class="form-check-label"></label>
+                            <small class="text-muted d-block">Required for Aerial Silks classes</small>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">Create Studio</button>
+                        <a asp-page="Index" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
