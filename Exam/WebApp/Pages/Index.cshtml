@@ -1,10 +1,125 @@
-﻿@page
+@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Home";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="text-center mb-5">
+    <h1 class="display-4">Welcome to Dance School</h1>
+    <p class="lead">Discover the joy of dance with our expert instructors across 12 different styles!</p>
+    <div class="mt-4">
+        <a asp-page="/Schedule/Index" class="btn btn-primary btn-lg me-2">View Schedule</a>
+        <a asp-page="/Students/Create" class="btn btn-outline-primary btn-lg">Add Student</a>
+    </div>
+</div>
+
+<!-- Dance Styles -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h4 class="mb-0">Our Dance Styles</h4>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            @foreach (var style in Model.DanceStyles)
+            {
+                <div class="col-md-3 col-sm-4 col-6 mb-3">
+                    <div class="text-center p-3 border rounded h-100">
+                        <h6 class="mb-0">@style.Name</h6>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Pricing -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h4 class="mb-0">Pricing</h4>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3 mb-3">
+                <div class="card h-100 border-primary">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Drop-in</h5>
+                        <h2 class="text-primary">€15</h2>
+                        <p class="card-text">Single class</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card h-100 border-success">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">10-Class Card</h5>
+                        <h2 class="text-success">€120</h2>
+                        <p class="card-text">Valid 3 months</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card h-100 border-info">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Monthly Single Style</h5>
+                        <h2 class="text-info">€75</h2>
+                        <p class="card-text">Unlimited, one style</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card h-100 border-warning">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Monthly All Styles</h5>
+                        <h2 class="text-warning">€130</h2>
+                        <p class="card-text">Unlimited, all styles</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="alert alert-success mt-3 mb-0">
+            <strong>Free Trial!</strong> Try one free class per dance style. Bring a friend - they get a free trial too!
+        </div>
+    </div>
+</div>
+
+<!-- Schedule Info -->
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h4 class="mb-0">Class Hours</h4>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2"><strong>Monday - Saturday:</strong> 18:00 - 21:00</li>
+                    <li><strong>Sunday:</strong> 10:00 - 14:00</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h4 class="mb-0">Our Studios</h4>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    @foreach (var studio in Model.Studios)
+                    {
+                        <li class="mb-1">
+                            <strong>@studio.Name:</strong> @studio.SizeSquareMeters m²
+                            @if (studio.HasPoles)
+                            {
+                                <span class="badge bg-info">Pole Fitness</span>
+                            }
+                            @if (studio.HasAerialRigging)
+                            {
+                                <span class="badge bg-info">Aerial Silks</span>
+                            }
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
 </div>

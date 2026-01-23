@@ -1,0 +1,265 @@
+@page "{id:int}"
+@model WebApp.Pages.Schedule.DetailsModel
+@{
+    ViewData["Title"] = $"{Model.DanceClass.DanceStyle.Name} - {Model.DanceClass.DayOfWeek}";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1>@Model.DanceClass.DanceStyle.Name</h1>
+        <p class="text-muted mb-0">
+            <span class="badge @Model.GetLevelBadgeClass(Model.DanceClass.Level)">@Model.DanceClass.Level</span>
+            @Model.DanceClass.DayOfWeek @Model.DanceClass.StartTime.ToString(@"hh\:mm") - @Model.DanceClass.EndTime.ToString(@"hh\:mm")
+        </p>
+    </div>
+    <a asp-page="Index" class="btn btn-outline-secondary">Back to Schedule</a>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="row">
+    <div class="col-md-4">
+        <!-- Class Info -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Class Information</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-5">Instructor</dt>
+                    <dd class="col-sm-7">@Model.DanceClass.InstructorName</dd>
+                    <dt class="col-sm-5">Studio</dt>
+                    <dd class="col-sm-7">@Model.DanceClass.Studio.Name (@Model.DanceClass.Studio.SizeSquareMeters m²)</dd>
+                    <dt class="col-sm-5">Capacity</dt>
+                    <dd class="col-sm-7">@Model.DanceClass.MaxStudents students</dd>
+                    <dt class="col-sm-5">Day</dt>
+                    <dd class="col-sm-7">@Model.DanceClass.DayOfWeek</dd>
+                    <dt class="col-sm-5">Time</dt>
+                    <dd class="col-sm-7">@Model.DanceClass.StartTime.ToString(@"hh\:mm") - @Model.DanceClass.EndTime.ToString(@"hh\:mm")</dd>
+                </dl>
+            </div>
+        </div>
+
+        <!-- Date Selection -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Select Date</h5>
+            </div>
+            <div class="card-body">
+                <form method="get" class="mb-0">
+                    <input type="hidden" name="id" value="@Model.DanceClass.Id" />
+                    <div class="d-flex gap-2 flex-wrap">
+                        @foreach (var date in Model.AvailableDates)
+                        {
+                            var isSelected = Model.SelectedDate?.Date == date.Date;
+                            <button type="submit" name="selectedDate" value="@date.ToString("yyyy-MM-dd")"
+                                    class="btn @(isSelected ? "btn-primary" : "btn-outline-primary")">
+                                @date.ToString("MMM dd")
+                            </button>
+                        }
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <!-- Booked Students -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    Booked Students
+                    @if (Model.SelectedDate.HasValue)
+                    {
+                        <small class="text-muted">- @Model.SelectedDate.Value.ToString("dddd, MMM dd, yyyy")</small>
+                    }
+                </h5>
+                <span class="badge bg-primary">
+                    @Model.Bookings.Count / @Model.DanceClass.MaxStudents
+                </span>
+            </div>
+            @{
+                var isFutureDate = Model.SelectedDate.HasValue && Model.SelectedDate.Value.Date >= DateTime.Today;
+            }
+            <div class="card-body p-0">
+                @if (Model.Bookings.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Email</th>
+                                    <th>Type</th>
+                                    <th>Attended</th>
+                                    @if (isFutureDate)
+                                    {
+                                        <th></th>
+                                    }
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var booking in Model.Bookings)
+                                {
+                                    <tr>
+                                        <td>
+                                            <a asp-page="/Students/Details" asp-route-id="@booking.StudentId">
+                                                @booking.Student.FullName
+                                            </a>
+                                        </td>
+                                        <td>@booking.Student.Email</td>
+                                        <td>
+                                            @if (booking.IsTrial)
+                                            {
+                                                <span class="badge bg-info">Trial</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-primary">Package</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (booking.Attended == true)
+                                            {
+                                                <span class="text-success">Yes</span>
+                                            }
+                                            else if (booking.Attended == false)
+                                            {
+                                                <span class="text-danger">No</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+                                        @if (isFutureDate)
+                                        {
+                                            <td>
+                                                @if (!booking.Attended.HasValue)
+                                                {
+                                                    <form method="post" asp-page-handler="CancelBooking"
+                                                          asp-route-id="@Model.DanceClass.Id"
+                                                          asp-route-bookingId="@booking.Id"
+                                                          onsubmit="return confirm('Are you sure you want to cancel the booking for @booking.Student.FullName?');"
+                                                          style="display:inline;">
+                                                        <input type="hidden" name="selectedDate" value="@Model.SelectedDate?.ToString("yyyy-MM-dd")" />
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger">Cancel</button>
+                                                    </form>
+                                                }
+                                            </td>
+                                        }
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="p-4 text-center text-muted">
+                        No students booked for this date.
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Add Student -->
+        @if (Model.Bookings.Count < Model.DanceClass.MaxStudents)
+        {
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Add Student to Class</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" asp-page-handler="AddStudent" asp-route-id="@Model.DanceClass.Id" id="addStudentForm">
+                        <input type="hidden" name="selectedDate" value="@Model.SelectedDate?.ToString("yyyy-MM-dd")" />
+                        <div class="row g-3">
+                            <div class="col-md-5">
+                                <label asp-for="Input.StudentId" class="form-label">Student</label>
+                                <select asp-for="Input.StudentId" asp-items="Model.StudentOptions" class="form-select" id="studentSelect" required>
+                                    <option value="">-- Select student --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="Input.PaymentMethod" class="form-label">Payment Method</label>
+                                <select asp-for="Input.PaymentMethod" class="form-select" id="paymentSelect" required>
+                                    <option value="">-- Select student first --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 d-flex align-items-end">
+                                <button type="submit" class="btn btn-success" id="addBtn" disabled>Add Student</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-warning mb-0">
+                <strong>Class is full!</strong> Maximum capacity of @Model.DanceClass.MaxStudents students reached.
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var studentSelect = document.getElementById('studentSelect');
+        var paymentSelect = document.getElementById('paymentSelect');
+        var addBtn = document.getElementById('addBtn');
+
+        if (studentSelect) {
+            studentSelect.addEventListener('change', async function() {
+                if (!this.value) {
+                    paymentSelect.innerHTML = '<option value="">-- Select student first --</option>';
+                    addBtn.disabled = true;
+                    return;
+                }
+
+                // Fetch payment options for student
+                try {
+                    const response = await fetch(`/api/student-payments?studentId=${this.value}&classId=@Model.DanceClass.Id&styleId=@Model.DanceClass.DanceStyleId`);
+                    if (!response.ok) {
+                        // Fallback - load page data
+                        paymentSelect.innerHTML = '<option value="trial">Free Trial (check eligibility)</option>';
+                        addBtn.disabled = false;
+                        return;
+                    }
+                    const options = await response.json();
+                    paymentSelect.innerHTML = '';
+                    if (options.length === 0) {
+                        paymentSelect.innerHTML = '<option value="">No valid payment method</option>';
+                        addBtn.disabled = true;
+                    } else {
+                        options.forEach(opt => {
+                            var o = document.createElement('option');
+                            o.value = opt.value;
+                            o.textContent = opt.name;
+                            paymentSelect.appendChild(o);
+                        });
+                        addBtn.disabled = false;
+                    }
+                } catch (e) {
+                    // Fallback
+                    paymentSelect.innerHTML = '<option value="trial">Free Trial</option>';
+                    addBtn.disabled = false;
+                }
+            });
+        }
+    </script>
+}

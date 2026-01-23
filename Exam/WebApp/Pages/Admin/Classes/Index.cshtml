@@ -1,0 +1,110 @@
+@page
+@model WebApp.Pages.Admin.Classes.IndexModel
+@{
+    ViewData["Title"] = "Manage Classes";
+}
+
+<h1>Manage Classes</h1>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <p class="lead mb-0">Total: @Model.Classes.Count classes</p>
+    <a asp-page="Create" class="btn btn-success">Add New Class</a>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label asp-for="StyleFilter" class="form-label">Style</label>
+                <select asp-for="StyleFilter" asp-items="Model.StyleOptions" class="form-select">
+                    <option value="">All Styles</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="StudioFilter" class="form-label">Studio</label>
+                <select asp-for="StudioFilter" asp-items="Model.StudioOptions" class="form-select">
+                    <option value="">All Studios</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="DayFilter" class="form-label">Day</label>
+                <select asp-for="DayFilter" asp-items="Model.DayOptions" class="form-select">
+                    <option value="">All Days</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary me-2">Filter</button>
+                <a asp-page="Index" class="btn btn-outline-secondary">Clear</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (!Model.Classes.Any())
+{
+    <div class="alert alert-info">
+        No classes found. <a asp-page="Create">Create one</a>.
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Day</th>
+                    <th>Time</th>
+                    <th>Style</th>
+                    <th>Level</th>
+                    <th>Instructor</th>
+                    <th>Studio</th>
+                    <th>Capacity</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var danceClass in Model.Classes)
+                {
+                    <tr>
+                        <td>@danceClass.DayOfWeek</td>
+                        <td>@danceClass.StartTime.ToString(@"hh\:mm") - @danceClass.EndTime.ToString(@"hh\:mm")</td>
+                        <td>@danceClass.DanceStyle.Name</td>
+                        <td><span class="badge @Model.GetLevelBadgeClass(danceClass.Level)">@danceClass.Level</span></td>
+                        <td>@danceClass.InstructorName</td>
+                        <td>
+                            @danceClass.Studio.Name
+                            @if (danceClass.Studio.HasPoles)
+                            {
+                                <span class="badge bg-info">Poles</span>
+                            }
+                            @if (danceClass.Studio.HasAerialRigging)
+                            {
+                                <span class="badge bg-info">Aerial</span>
+                            }
+                        </td>
+                        <td>@danceClass.MaxStudents</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a asp-page="Edit" asp-route-id="@danceClass.Id" class="btn btn-outline-primary">Edit</a>
+                                <a asp-page="Delete" asp-route-id="@danceClass.Id" class="btn btn-outline-danger">Delete</a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+<div class="mt-4">
+    <a asp-page="/Schedule/Index" class="btn btn-outline-secondary">View Public Schedule</a>
+</div>

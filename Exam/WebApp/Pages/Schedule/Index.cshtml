@@ -1,0 +1,163 @@
+@page
+@model WebApp.Pages.Schedule.IndexModel
+@{
+    ViewData["Title"] = "Class Schedule";
+}
+
+<style>
+    .table-fixed {
+        table-layout: fixed;
+        width: 100%;
+    }
+    .table-fixed td {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+</style>
+
+<h1>Class Schedule</h1>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label asp-for="StyleFilter" class="form-label">Dance Style</label>
+                <select asp-for="StyleFilter" asp-items="Model.StyleOptions" class="form-select">
+                    <option value="">All Styles</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="LevelFilter" class="form-label">Level</label>
+                <select asp-for="LevelFilter" asp-items="Model.LevelOptions" class="form-select">
+                    <option value="">All Levels</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="DayFilter" class="form-label">Day</label>
+                <select asp-for="DayFilter" asp-items="Model.DayOptions" class="form-select">
+                    <option value="">All Days</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary me-2">Filter</button>
+                <a asp-page="Index" class="btn btn-outline-secondary">Clear</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Schedule Hours Info -->
+<div class="alert alert-info">
+    <strong>Class Hours:</strong> Monday-Saturday 18:00-21:00 | Sunday 10:00-14:00
+</div>
+
+@if (!Model.Classes.Any())
+{
+    <div class="alert alert-warning">
+        No classes found matching your criteria. Try adjusting the filters.
+    </div>
+}
+else
+{
+    <!-- Schedule by Day -->
+    @foreach (var dayGroup in Model.Classes.GroupBy(c => c.DayOfWeek).OrderBy(g => g.Key == DayOfWeek.Sunday ? 7 : (int)g.Key))
+    {
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">@dayGroup.Key</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 table-fixed">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 15%;">Time</th>
+                                <th style="width: 15%;">Style</th>
+                                <th style="width: 12%;">Level</th>
+                                <th style="width: 18%;">Instructor</th>
+                                <th style="width: 20%;">Studio</th>
+                                <th style="width: 12%;">Spots</th>
+                                <th style="width: 8%;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var danceClass in dayGroup.OrderBy(c => c.StartTime))
+                            {
+                                var spotsLeft = danceClass.MaxStudents - Model.GetBookingCount(danceClass.Id);
+                                <tr>
+                                    <td>
+                                        <strong>@danceClass.StartTime.ToString(@"hh\:mm")</strong> - @danceClass.EndTime.ToString(@"hh\:mm")
+                                    </td>
+                                    <td>@danceClass.DanceStyle.Name</td>
+                                    <td>
+                                        <span class="badge @Model.GetLevelBadgeClass(danceClass.Level)">
+                                            @danceClass.Level
+                                        </span>
+                                    </td>
+                                    <td>@danceClass.InstructorName</td>
+                                    <td>
+                                        @danceClass.Studio.Name
+                                        <small class="text-muted">(@danceClass.Studio.SizeSquareMeters m²)</small>
+                                    </td>
+                                    <td>
+                                        @if (spotsLeft > 5)
+                                        {
+                                            <span class="text-success">@spotsLeft available</span>
+                                        }
+                                        else if (spotsLeft > 0)
+                                        {
+                                            <span class="text-warning">@spotsLeft left</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-danger">Full</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <a asp-page="Details" asp-route-id="@danceClass.Id"
+                                           class="btn btn-sm btn-outline-primary">
+                                            Details
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+<!-- Studios Info -->
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0">Our Studios</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            @foreach (var studio in Model.Studios)
+            {
+                <div class="col-md-3 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h6 class="card-title">@studio.Name</h6>
+                            <p class="card-text mb-1"><small>Size: @studio.SizeSquareMeters m²</small></p>
+                            <p class="card-text mb-1"><small>Capacity: @studio.MaxCapacity students</small></p>
+                            @if (studio.HasPoles)
+                            {
+                                <span class="badge bg-info">Pole Fitness</span>
+                            }
+                            @if (studio.HasAerialRigging)
+                            {
+                                <span class="badge bg-info">Aerial Silks</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

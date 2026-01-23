@@ -1,0 +1,169 @@
+@page
+@model WebApp.Pages.Showcases.EligibilityModel
+@{
+    ViewData["Title"] = "Showcase Eligibility";
+}
+
+<h1>Showcase Eligibility</h1>
+
+<div class="alert alert-info">
+    <h5>Showcase Requirements:</h5>
+    <ul class="mb-0">
+        <li><strong>Attendance Rate:</strong> 80% or higher</li>
+        <li><strong>Level:</strong> Intermediate, Advanced, or Professional</li>
+        <li>Both conditions must be met</li>
+    </ul>
+</div>
+
+<!-- Check Individual Student -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Check Individual Student</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Select Student</label>
+                <select asp-for="SelectedStudentId" asp-items="Model.StudentOptions" class="form-select">
+                    <option value="">-- Select Student --</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary">Check Eligibility</button>
+            </div>
+        </form>
+
+        @if (Model.SelectedStudent != null)
+        {
+            <hr />
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>@Model.SelectedStudent.FullName</h5>
+                    <p class="text-muted">@Model.SelectedStudent.Email</p>
+
+                    <dl class="row">
+                        <dt class="col-sm-6">Total Bookings</dt>
+                        <dd class="col-sm-6">@Model.SelectedStudentStats.TotalBookings</dd>
+
+                        <dt class="col-sm-6">Classes Attended</dt>
+                        <dd class="col-sm-6">@Model.SelectedStudentStats.AttendedCount</dd>
+
+                        <dt class="col-sm-6">Attendance Rate</dt>
+                        <dd class="col-sm-6">
+                            <span class="@(Model.SelectedStudentStats.AttendanceRate >= 80 ? "text-success fw-bold" : "text-danger")">
+                                @Model.SelectedStudentStats.AttendanceRate.ToString("0.0")%
+                            </span>
+                            @if (Model.SelectedStudentStats.AttendanceRate >= 80)
+                            {
+                                <span class="badge bg-success ms-1">Meets requirement</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger ms-1">Below 80%</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-6">Highest Level Attended</dt>
+                        <dd class="col-sm-6">
+                            @if (Model.SelectedStudentStats.HighestLevel.HasValue)
+                            {
+                                <span class="badge @Model.GetLevelBadgeClass(Model.SelectedStudentStats.HighestLevel.Value)">
+                                    @Model.SelectedStudentStats.HighestLevel.Value
+                                </span>
+                                @if ((int)Model.SelectedStudentStats.HighestLevel.Value >= (int)ClassLevel.Intermediate)
+                                {
+                                    <span class="badge bg-success ms-1">Meets requirement</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger ms-1">Must be Intermediate+</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted">No classes attended</span>
+                            }
+                        </dd>
+                    </dl>
+                </div>
+                <div class="col-md-6">
+                    <div class="card @(Model.SelectedStudentStats.IsEligible ? "bg-success text-white" : "bg-danger text-white")">
+                        <div class="card-body text-center">
+                            <h3 class="mb-0">
+                                @if (Model.SelectedStudentStats.IsEligible)
+                                {
+                                    <span>ELIGIBLE for Showcase</span>
+                                }
+                                else
+                                {
+                                    <span>NOT ELIGIBLE</span>
+                                }
+                            </h3>
+                            @if (!Model.SelectedStudentStats.IsEligible)
+                            {
+                                <p class="mb-0 mt-2">
+                                    @if (Model.SelectedStudentStats.AttendanceRate < 80)
+                                    {
+                                        <span>Needs @((80 - Model.SelectedStudentStats.AttendanceRate).ToString("0.0"))% more attendance</span>
+                                    }
+                                    @if (Model.SelectedStudentStats.HighestLevel.HasValue &&
+                                        (int)Model.SelectedStudentStats.HighestLevel.Value < (int)ClassLevel.Intermediate)
+                                    {
+                                        <span>Needs to attend Intermediate+ classes</span>
+                                    }
+                                </p>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Eligible Students List -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">All Eligible Students</h5>
+        <span class="badge bg-success fs-6">@Model.EligibleStudents.Count students</span>
+    </div>
+    <div class="card-body">
+        @if (Model.EligibleStudents.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Email</th>
+                            <th>Attendance Rate</th>
+                            <th>Highest Level</th>
+                            <th>Total Classes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var stats in Model.EligibleStudents.OrderByDescending(s => s.AttendanceRate))
+                        {
+                            <tr>
+                                <td>@stats.Student.FullName</td>
+                                <td>@stats.Student.Email</td>
+                                <td><span class="text-success fw-bold">@stats.AttendanceRate.ToString("0.0")%</span></td>
+                                <td>
+                                    @if (stats.HighestLevel.HasValue)
+                                    {
+                                        <span class="badge @Model.GetLevelBadgeClass(stats.HighestLevel.Value)">@stats.HighestLevel.Value</span>
+                                    }
+                                </td>
+                                <td>@stats.AttendedCount</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <p class="text-muted mb-0">No students currently meet the showcase eligibility requirements.</p>
+        }
+    </div>
+</div>
