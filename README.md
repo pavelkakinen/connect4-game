@@ -13,3 +13,12 @@ This project demonstrates professional software development practices through a 
 -  Full CRUD functionality for game sessions
 -  Object-oriented design patterns
 -  Modular and testable code structure
+
+##  What I Learned
+
+- Implementing clean architecture in a real project
+- Designing modular, maintainable code structures
+- Working with databases and JSON serialization
+- Applying object-oriented design patterns
+- Building both console and web interfaces for the same logic
+- 
