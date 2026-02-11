@@ -21,4 +21,3 @@ This project demonstrates professional software development practices through a 
 - Working with databases and JSON serialization
 - Applying object-oriented design patterns
 - Building both console and web interfaces for the same logic
-- 
