@@ -139,7 +139,6 @@ public class GameBrain
     
     public (ECellState winner, List<(int row, int col)> winningCells) CheckWin()
     {
-        // Check every non-empty cell
         for (int row = 0; row < GameBoard.GetLength(0); row++)
         {
             for (int col = 0; col < GameBoard.GetLength(1); col++)
