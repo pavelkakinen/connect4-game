@@ -83,7 +83,6 @@ public class GameBrain
         {
             return (column % GameConfiguration.BoardWidth + GameConfiguration.BoardWidth) % GameConfiguration.BoardWidth;
         }
-
         return column;
     }
 
