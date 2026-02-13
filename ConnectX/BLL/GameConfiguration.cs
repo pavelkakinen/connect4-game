@@ -54,6 +54,17 @@ public class GameConfiguration
             BoardType = EBoardType.Cylinder
         };
 
+    public static GameConfiguration FromGameState(DAL.GameState state)
+    {
+        return new GameConfiguration
+        {
+            BoardWidth = state.BoardWidth,
+            BoardHeight = state.BoardHeight,
+            WinCondition = state.WinCond,
+            BoardType = state.BoardType
+        };
+    }
+
     public void SetP1Type(EPlayerType p1Type)
     {
         P1Type = p1Type;

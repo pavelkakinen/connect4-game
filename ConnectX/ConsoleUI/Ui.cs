@@ -1,4 +1,4 @@
-﻿using Domain;
+using Domain;
 
 namespace ConsoleUI;
 
@@ -27,11 +27,11 @@ public static class Ui
             }
             Console.WriteLine();
         }
-        
+
     }
 
     public static void DrawWinningBoard(
-        ECellState[,] gameBoard, 
+        ECellState[,] gameBoard,
         ECellState winner,
         List<(int row, int col)> winningCells
         )
@@ -56,26 +56,16 @@ public static class Ui
 
     public static void PrintGameResult(ECellState winner, string winnerName)
     {
-        if (winner == ECellState.Empty)
+        var (emoji, label) = winner switch
         {
-            Console.WriteLine("====================");
-            Console.WriteLine("    DRAW GAME");
-            Console.WriteLine("====================");
-        } else if (winner.Equals(ECellState.Red))
-        {
-            Console.WriteLine("====================");
-            Console.WriteLine($"    {winnerName} WINS 🔴");
-            Console.WriteLine("====================");
-        } else if (winner.Equals(ECellState.Blue))
-        {
-            Console.WriteLine("====================");
-            Console.WriteLine($"    {winnerName} WINS 🔵");
-            Console.WriteLine("====================");
-        }
-        Console.WriteLine();
-        Console.WriteLine("Press any key to continue...");
-        Console.ReadKey();
+            ECellState.Red => ("🔴", $"{winnerName} WINS"),
+            ECellState.Blue => ("🔵", $"{winnerName} WINS"),
+            _ => ("", "DRAW GAME")
+        };
 
+        Console.WriteLine("====================");
+        Console.WriteLine($"    {label} {emoji}");
+        Console.WriteLine("====================");
     }
 
     private static string GetCellRepresentation(ECellState cellValue) =>
@@ -96,14 +86,14 @@ public static class Ui
         Console.WriteLine("     ENTER PLAYER NAMES       ");
         Console.WriteLine("==============================");
         Console.WriteLine();
-    
+
         Console.Write("Player 1 (Red 🔴) name: ");
         var player1Name = Console.ReadLine();
         if (string.IsNullOrWhiteSpace(player1Name))
         {
             player1Name = "Player 1";
         }
-    
+
         string player2Name;
         if (isVsComputer)
         {
@@ -118,7 +108,7 @@ public static class Ui
                 player2Name = "Player 2";
             }
         }
-    
+
         return (player1Name, player2Name);
     }
 }

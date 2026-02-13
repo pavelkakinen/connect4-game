@@ -9,6 +9,8 @@ namespace WebApp.Pages;
 
 public class GamePlay : PageModel
 {
+    private const int AiDepth = 6;
+
     private readonly IRepository<GameState> _gameStateRepo;
 
     public GamePlay(IRepository<GameState> gameStateRepo)
@@ -19,136 +21,121 @@ public class GamePlay : PageModel
     public string GameId { get; set; } = default!;
     public GameBrain GameBrain { get; set; } = default!;
     public GameConfiguration GameConfiguration { get; set; } = default!;
-    
+
     public bool IsGameOver { get; private set; }
     public string CurrentPlayerName { get; private set; } = default!;
     public ECellState? Winner { get; private set; }
     public string? WinnerName { get; private set; }
     public List<(int row, int col)> WinningCells { get; private set; } = new();
     public bool ShowPauseMenu { get; set; }
-    
+
     private IAIPlayer? _aiPlayer1;
     private IAIPlayer? _aiPlayer2;
-    
+
     public IActionResult OnGet(
-    string? gameId,
-    int? boardWidth,
-    int? boardHeight,
-    int? winCondition,
-    int? boardType,
-    string? player1Name,
-    string? player2Name,
-    int? p1Type,
-    int? p2Type,
-    int? col,
-    bool pause = false)
-{
-    ShowPauseMenu = pause;
-    
-    if (!string.IsNullOrEmpty(gameId))
+        string? gameId,
+        int? boardWidth,
+        int? boardHeight,
+        int? winCondition,
+        int? boardType,
+        string? player1Name,
+        string? player2Name,
+        int? p1Type,
+        int? p2Type,
+        int? col,
+        bool pause = false)
+    {
+        ShowPauseMenu = pause;
+
+        if (!string.IsNullOrEmpty(gameId))
+            return LoadExistingGame(gameId, col, pause);
+
+        if (boardWidth.HasValue && boardHeight.HasValue && winCondition.HasValue &&
+            !string.IsNullOrEmpty(player1Name) && !string.IsNullOrEmpty(player2Name))
+            return CreateNewGame(boardWidth.Value, boardHeight.Value, winCondition.Value,
+                boardType ?? 0, player1Name, player2Name, p1Type ?? 0, p2Type ?? 0);
+
+        return RedirectToPage("./NewGame");
+    }
+
+    private IActionResult LoadExistingGame(string gameId, int? col, bool pause)
     {
         try
         {
             var savedState = _gameStateRepo.Load(gameId);
-            
-            GameConfiguration = new GameConfiguration
-            {
-                BoardWidth = savedState.BoardWidth,
-                BoardHeight = savedState.BoardHeight,
-                WinCondition = savedState.WinCond,
-                BoardType = savedState.BoardType
-            };
-            
+
+            GameConfiguration = GameConfiguration.FromGameState(savedState);
             GameConfiguration.SetP1Type((EPlayerType)savedState.P1Type);
             GameConfiguration.SetP2Type((EPlayerType)savedState.P2Type);
-            
+
             GameBrain = new GameBrain(GameConfiguration, savedState.Player1Name, savedState.Player2Name);
             GameBrain.LoadFromGameState(savedState);
-            
+
             GameId = gameId;
-            
+
             InitializeAI();
             CheckForWinner();
-            
+
             if (col.HasValue && !IsGameOver && !pause)
             {
                 ProcessPlayerMove(col.Value);
                 ProcessAIMoves();
                 SaveGameState();
             }
-            
+
             PopulateViewProperties();
             return Page();
         }
         catch (Exception)
         {
-            //  invalid
+            return RedirectToPage("./NewGame");
         }
     }
-    
-    // Create new game if we have configuration info
-    if (boardWidth.HasValue && boardHeight.HasValue && winCondition.HasValue &&
-        !string.IsNullOrEmpty(player1Name) && !string.IsNullOrEmpty(player2Name))
+
+    private IActionResult CreateNewGame(int width, int height, int winCond,
+        int boardType, string p1Name, string p2Name, int p1Type, int p2Type)
     {
         GameConfiguration = new GameConfiguration
         {
-            BoardWidth = boardWidth.Value,
-            BoardHeight = boardHeight.Value,
-            WinCondition = winCondition.Value,
-            BoardType = (EBoardType)(boardType ?? 0)
+            BoardWidth = width,
+            BoardHeight = height,
+            WinCondition = winCond,
+            BoardType = (EBoardType)boardType
         };
-        
-        GameConfiguration.SetP1Type((EPlayerType)(p1Type ?? 0));
-        GameConfiguration.SetP2Type((EPlayerType)(p2Type ?? 0));
-        
-        GameBrain = new GameBrain(GameConfiguration, player1Name, player2Name);
-        
+
+        GameConfiguration.SetP1Type((EPlayerType)p1Type);
+        GameConfiguration.SetP2Type((EPlayerType)p2Type);
+
+        GameBrain = new GameBrain(GameConfiguration, p1Name, p2Name);
+
         InitializeAI();
         ProcessAIMoves();
-        
+
         var initialState = GameBrain.GetGameState();
         initialState.P1Type = (int)GameConfiguration.P1Type;
         initialState.P2Type = (int)GameConfiguration.P2Type;
-        
+
         GameId = _gameStateRepo.Save(initialState);
-        
+
         PopulateViewProperties();
         return Page();
     }
-    
-    return RedirectToPage("./NewGame");
-}
-    
+
     private void CheckForWinner()
     {
-        var board = GameBrain.GetBoard();
-        
-        for (int row = 0; row < board.GetLength(0); row++)
+        var result = GameBrain.CheckWin();
+        if (result.winner != ECellState.Empty)
         {
-            for (int col = 0; col < board.GetLength(1); col++)
-            {
-                var cellState = board[row, col];
-                
-                if (cellState != ECellState.Empty)
-                {
-                    var winCheck = GameBrain.CheckWin(row, col);
-                    
-                    if (winCheck.winner != ECellState.Empty)
-                    {
-                        Winner = winCheck.winner;
-                        WinningCells = winCheck.winningCells;
-                        return;
-                    }
-                }
-            }
+            Winner = result.winner;
+            WinningCells = result.winningCells;
         }
     }
-    
+
     public IActionResult OnPostSaveAndExit(string gameId)
     {
         return RedirectToPage("./Index");
     }
-    
+
     public IActionResult OnPostDeleteAndExit(string gameId)
     {
         try
@@ -158,33 +145,31 @@ public class GamePlay : PageModel
         catch
         {
         }
-        
+
         return RedirectToPage("./Index");
     }
-    
+
     public IActionResult OnPostContinue(string gameId)
     {
         return RedirectToPage("./GamePlay", new { gameId = gameId });
     }
-    
+
     private void InitializeAI()
     {
-        if (GameConfiguration.P1Type == EPlayerType.Computer)
-        {
-            _aiPlayer1 = new MinimaxAI(maxDepth: 6);
-        }
-        
-        if (GameConfiguration.P2Type == EPlayerType.Computer)
-        {
-            _aiPlayer2 = new MinimaxAI(maxDepth: 6);
-        }
+        _aiPlayer1 = GameConfiguration.P1Type == EPlayerType.Computer
+            ? new MinimaxAI(maxDepth: AiDepth)
+            : null;
+
+        _aiPlayer2 = GameConfiguration.P2Type == EPlayerType.Computer
+            ? new MinimaxAI(maxDepth: AiDepth)
+            : null;
     }
-    
+
     private void ProcessPlayerMove(int col)
     {
         if (col < 0 || col >= GameConfiguration.BoardWidth)
             return;
-        
+
         var result = GameBrain.ProcessMove(col);
         if (result.success)
         {
@@ -196,20 +181,20 @@ public class GamePlay : PageModel
             }
         }
     }
-    
+
     private void ProcessAIMoves()
     {
         while (!IsGameOverCheck())
         {
             bool isRedTurn = GameBrain.NextMoveByRed;
             IAIPlayer? currentAI = isRedTurn ? _aiPlayer1 : _aiPlayer2;
-            
+
             if (currentAI == null)
                 break;
-            
+
             var aiMove = currentAI.GetBestMove(GameBrain.GetBoard(), isRedTurn, GameConfiguration);
             var result = GameBrain.ProcessMove(aiMove);
-            
+
             if (result.success)
             {
                 var winCheck = GameBrain.CheckWin(result.row, aiMove);
@@ -220,29 +205,24 @@ public class GamePlay : PageModel
                     break;
                 }
             }
-            
+
             if (GameBrain.BoardIsFull())
                 break;
         }
     }
-    
+
     private bool IsGameOverCheck()
     {
         return Winner != null || GameBrain.BoardIsFull();
     }
-    
+
     private void SaveGameState()
     {
-        var state = GameBrain.GetGameState();
-        state.GameId = GameId;
+        var state = GameBrain.GetGameState(GameId);
         state.P1Type = (int)GameConfiguration.P1Type;
         state.P2Type = (int)GameConfiguration.P2Type;
-    
-        Console.WriteLine($"BEFORE SAVE: {state.GameId} at {state.SavedAt:HH:mm:ss.fff}");
-    
+
         _gameStateRepo.Save(state);
-    
-        Console.WriteLine($"AFTER SAVE: {state.GameId}");
     }
 
     public IActionResult OnGetCheckUpdate(string gameId, long lastUpdateTimestamp)
@@ -252,29 +232,26 @@ public class GamePlay : PageModel
             var currentState = _gameStateRepo.Load(gameId);
             var serverTimestamp = new DateTimeOffset(currentState.SavedAt).ToUnixTimeSeconds();
             bool hasUpdate = serverTimestamp > lastUpdateTimestamp;
-        
-            Console.WriteLine($"CHECK: client={lastUpdateTimestamp}, server={serverTimestamp}, updated={hasUpdate}");
-        
+
             return new JsonResult(new
             {
                 updated = hasUpdate,
                 timestamp = serverTimestamp
             });
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Console.WriteLine($"CHECK ERROR: {ex.Message}");
             return new JsonResult(new { updated = false });
         }
     }
-    
+
     private void PopulateViewProperties()
     {
         var state = GameBrain.GetGameState();
-        
+
         IsGameOver = IsGameOverCheck();
         CurrentPlayerName = state.IsNextMoveByRed ? state.Player1Name : state.Player2Name;
-        
+
         if (Winner == ECellState.Red)
         {
             WinnerName = state.Player1Name;
@@ -284,6 +261,4 @@ public class GamePlay : PageModel
             WinnerName = state.Player2Name;
         }
     }
-    
-    
 }

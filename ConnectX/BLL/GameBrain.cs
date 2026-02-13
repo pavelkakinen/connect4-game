@@ -99,24 +99,21 @@ public class GameBrain
         return true;
     }
 
-    private List<(int row, int col)> GetSellsInDirection(int row, int column, int dirY, int dirX)
+    private List<(int row, int col)> GetCellsInDirection(int row, int column, int dirY, int dirX)
     {
         var cells = new List<(int row, int col)>();
-        
-        var count = 0;
 
         var nextY = row + dirY;
         var nextX = NormalizeColumn(column +  dirX);
-        
+
         while (ValidateCoordinates(nextY, nextX) &&
                GameBoard[nextY, NormalizeColumn(nextX)] == GameBoard[row, column])
         {
             cells.Add((nextY, nextX));
-            count++;
             nextY += dirY;
             nextX = NormalizeColumn(nextX + dirX);
         }
-        
+
         return cells;
     }
 
@@ -127,8 +124,8 @@ public class GameBrain
             var winningCells = new List<(int row, int col)>();
             var (dirY,  dirX) = GetDirection(index);
             
-            var cells1 = GetSellsInDirection(row, column, dirY,dirX);
-            var cells2 = GetSellsInDirection(row, column, -dirY, -dirX);
+            var cells1 = GetCellsInDirection(row, column, dirY,dirX);
+            var cells2 = GetCellsInDirection(row, column, -dirY, -dirX);
 
             winningCells.AddRange(cells1);
             winningCells.AddRange(cells2);
@@ -168,10 +165,10 @@ public class GameBrain
         return (ECellState.Empty, new List<(int row, int col)>());
     }
 
-    public GameState GetGameState() =>
+    public GameState GetGameState(string? gameId = null) =>
     new GameState()
     {
-        GameId = "",
+        GameId = gameId ?? "",
         SavedAt = DateTime.Now,
         BoardWidth = GameConfiguration.BoardWidth,
         BoardHeight = GameConfiguration.BoardHeight,
@@ -180,13 +177,13 @@ public class GameBrain
         Player1Name = Player1Name,
         Player2Name = Player2Name,
         IsNextMoveByRed = NextMoveByRed,
-        Board = ConvertBoardToList(),
+        Board = SerializeBoard(),
         P1Type = (int)GameConfiguration.P1Type,
         P2Type = (int)GameConfiguration.P2Type
     };
     
     
-    private List<List<int>> ConvertBoardToList()
+    private List<List<int>> SerializeBoard()
     {
         var list = new List<List<int>>();
         
@@ -205,17 +202,29 @@ public class GameBrain
     
     public void LoadFromGameState(GameState state)
     {
-        for (int row = 0; row < state.BoardHeight; row++)
-        {
-            for (int col = 0; col < state.BoardWidth; col++)
-            {
-                GameBoard[row, col] = (ECellState)state.Board[row][col];
-            }
-        }
-        
+        DeserializeBoard(state.Board);
+
         NextMoveByRed = state.IsNextMoveByRed;
         GameConfiguration.SetP1Type((EPlayerType)state.P1Type);
         GameConfiguration.SetP2Type((EPlayerType)state.P2Type);
+    }
+
+    private void DeserializeBoard(List<List<int>> board)
+    {
+        for (int row = 0; row < board.Count; row++)
+        {
+            for (int col = 0; col < board[row].Count; col++)
+            {
+                GameBoard[row, col] = (ECellState)board[row][col];
+            }
+        }
+    }
+
+    public bool IsGameFinished()
+    {
+        if (BoardIsFull()) return true;
+        var (winner, _) = CheckWin();
+        return winner != ECellState.Empty;
     }
 
 }

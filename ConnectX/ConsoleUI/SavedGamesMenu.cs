@@ -12,88 +12,56 @@ public static class SavedGamesMenu
         IRepository<GameState> repository,
         Func<GameConfiguration, string, string> loadAndStartGame)
     {
-        var savedGames = repository.List();
-        
-        if (savedGames.Count == 0)
+        return ShowGameMenu(repository, "SELECT SAVED GAME", game =>
         {
-            ShowNoGamesMessage();
-            return "";
-        }
-        
-        var loadMenu = new Menu("SELECT SAVED GAME", EMenuLevel.First);
-        
-        for (int i = 0; i < savedGames.Count; i++)
-        {
-            var game = savedGames[i];
-            loadMenu.AddMenuItem($"{i + 1}", game.description, () =>
-            {
-                var gameState = repository.Load(game.id);
-                
-                var loadedConfig = new GameConfiguration
-                {
-                    BoardWidth = gameState.BoardWidth,
-                    BoardHeight = gameState.BoardHeight,
-                    WinCondition = gameState.WinCond,
-                    BoardType = gameState.BoardType
-                };
-                
-                return loadAndStartGame(loadedConfig, game.id);
-            });
-        }
-        
-        return loadMenu.Run();
+            var gameState = repository.Load(game.id);
+            var loadedConfig = GameConfiguration.FromGameState(gameState);
+            return loadAndStartGame(loadedConfig, game.id);
+        });
     }
-    
+
     public static string ShowDeleteMenu(IRepository<GameState> repository)
     {
-        var savedGames = repository.List();
-        
-        if (savedGames.Count == 0)
+        return ShowGameMenu(repository, "SELECT GAME TO DELETE", game =>
         {
-            ShowNoGamesMessage();
-            return "";
-        }
-        
-        var deleteMenu = new Menu("SELECT GAME TO DELETE", EMenuLevel.First);
-        
-        for (int i = 0; i < savedGames.Count; i++)
-        {
-            var game = savedGames[i];
-            deleteMenu.AddMenuItem($"{i + 1}", game.description, () =>
-            {
-                return DeleteGameWithConfirmation(repository, game);
-            });
-        }
-        
-        return deleteMenu.Run();
+            return DeleteGameWithConfirmation(repository, game);
+        });
     }
-    
+
     public static string ShowEditMenu(IRepository<GameState> repository)
     {
+        return ShowGameMenu(repository, "SELECT GAME TO EDIT", game =>
+        {
+            return EditGameInfo(repository, game.id);
+        });
+    }
+
+    private static string ShowGameMenu(
+        IRepository<GameState> repository,
+        string title,
+        Func<(string id, string description), string> action)
+    {
         var savedGames = repository.List();
-        
+
         if (savedGames.Count == 0)
         {
             ShowNoGamesMessage();
             return "";
         }
-        
-        var editMenu = new Menu("SELECT GAME TO EDIT", EMenuLevel.First);
-        
+
+        var menu = new Menu(title, EMenuLevel.First);
+
         for (int i = 0; i < savedGames.Count; i++)
         {
             var game = savedGames[i];
-            editMenu.AddMenuItem($"{i + 1}", game.description, () =>
-            {
-                return EditGameInfo(repository, game.id);
-            });
+            menu.AddMenuItem($"{i + 1}", game.description, () => action(game));
         }
-        
-        return editMenu.Run();
+
+        return menu.Run();
     }
-    
+
     // ========== PRIVATE HELPER METHODS ==========
-    
+
     private static void ShowNoGamesMessage()
     {
         Console.Clear();
@@ -103,9 +71,9 @@ public static class SavedGamesMenu
         Console.WriteLine("\nPress any key to continue...");
         Console.ReadKey();
     }
-    
+
     private static string DeleteGameWithConfirmation(
-        IRepository<GameState> repository, 
+        IRepository<GameState> repository,
         (string id, string description) game)
     {
         Console.Clear();
@@ -117,10 +85,10 @@ public static class SavedGamesMenu
         Console.WriteLine($"ID: {game.id}");
         Console.WriteLine();
         Console.Write("Delete this game? (y/n): ");
-        
+
         var confirm = Console.ReadKey();
         Console.WriteLine();
-        
+
         if (confirm.KeyChar == 'y' || confirm.KeyChar == 'Y')
         {
             repository.Delete(game.id);
@@ -134,22 +102,22 @@ public static class SavedGamesMenu
             Console.WriteLine();
             Console.WriteLine("Deletion cancelled.");
         }
-        
+
         Console.WriteLine("\nPress any key to continue...");
         Console.ReadKey();
         return "m";
     }
-    
+
     private static string EditGameInfo(IRepository<GameState> repository, string gameId)
     {
         var gameState = repository.Load(gameId);
-        
+
         Console.Clear();
         Console.WriteLine("==============================");
         Console.WriteLine("       EDIT GAME INFO         ");
         Console.WriteLine("==============================");
         Console.WriteLine();
-        
+
         Console.WriteLine($"Current Player 1: {gameState.Player1Name}");
         Console.Write("New Player 1 name (press Enter to keep): ");
         var newP1 = Console.ReadLine();
@@ -157,7 +125,7 @@ public static class SavedGamesMenu
         {
             gameState.Player1Name = newP1;
         }
-        
+
         Console.WriteLine();
         Console.WriteLine($"Current Player 2: {gameState.Player2Name}");
         Console.Write("New Player 2 name (press Enter to keep): ");
@@ -166,16 +134,16 @@ public static class SavedGamesMenu
         {
             gameState.Player2Name = newP2;
         }
-        
+
         repository.Save(gameState);
-        
+
         Console.WriteLine();
         Console.WriteLine("==============================");
         Console.WriteLine("      GAME UPDATED!           ");
         Console.WriteLine("==============================");
         Console.WriteLine("\nPress any key to continue...");
         Console.ReadKey();
-        
+
         return "m";
     }
 }

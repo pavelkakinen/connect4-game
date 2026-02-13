@@ -39,7 +39,7 @@ public class GameStateRepositoryJson : IRepository<GameState>
     
     public async Task<List<(string id, string description)>> ListAsync()
     {
-        return List();
+        return await Task.Run(() => List());
     }
     
     public string Save(GameState data)
@@ -48,9 +48,6 @@ public class GameStateRepositoryJson : IRepository<GameState>
         {
             data.GameId = GenerateGameId();
         }
-        
-        Console.WriteLine($" JSON SAVE: {data.GameId} at {data.SavedAt:HH:mm:ss.fff}");
-        
         
         var jsonStr = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
         var fileName = $"{data.GameId}.json";
