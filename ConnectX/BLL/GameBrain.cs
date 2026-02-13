@@ -5,7 +5,6 @@ namespace BLL;
 
 public class GameBrain
 {
-    
     private ECellState[,] GameBoard { get; set; }
     public bool NextMoveByRed { get; private set; } = true;
     private GameConfiguration GameConfiguration { get; set; }
@@ -92,8 +91,7 @@ public class GameBrain
     {
         if (row < 0 || row >= GameConfiguration.BoardHeight) return false;
 
-        if (GameConfiguration.BoardType == EBoardType.Cylinder)
-            return true;
+        if (GameConfiguration.BoardType == EBoardType.Cylinder) return true;
 
         if (col < 0 || col >= GameConfiguration.BoardWidth) return false;
         return true;
