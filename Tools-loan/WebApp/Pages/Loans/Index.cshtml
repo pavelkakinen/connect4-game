@@ -1,0 +1,78 @@
+@page
+@model WebApp.Pages.Loans.IndexModel
+@{
+    ViewData["Title"] = "Active Loans";
+}
+
+<h1>Active Loans</h1>
+
+<p>
+    <a asp-page="Checkout" class="btn btn-primary">New Checkout</a>
+    <a asp-page="History" class="btn btn-outline-secondary">View History</a>
+</p>
+
+@if (Model.OverdueLoans.Any())
+{
+    <div class="alert alert-danger">
+        <h5>Overdue Items (@Model.OverdueLoans.Count)</h5>
+        <table class="table table-sm mb-0">
+            <thead>
+                <tr>
+                    <th>Tool</th>
+                    <th>Member</th>
+                    <th>Due Date</th>
+                    <th>Days Overdue</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var loan in Model.OverdueLoans)
+                {
+                    <tr>
+                        <td>@loan.Tool.Name</td>
+                        <td>@loan.Member.FullName</td>
+                        <td>@loan.DueDate.ToString("d")</td>
+                        <td>@((DateTime.UtcNow - loan.DueDate).Days)</td>
+                        <td>
+                            <a asp-page="Return" asp-route-id="@loan.Id" class="btn btn-sm btn-warning">Return</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+<h4>Currently On Loan</h4>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Tool</th>
+            <th>Member</th>
+            <th>Checkout Date</th>
+            <th>Due Date</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var loan in Model.ActiveLoans)
+        {
+            var daysUntilDue = (loan.DueDate - DateTime.UtcNow).Days;
+            <tr class="@(daysUntilDue <= 2 && daysUntilDue >= 0 ? "table-warning" : "")">
+                <td><a asp-page="/Tools/Details" asp-route-id="@loan.ToolId">@loan.Tool.Name</a></td>
+                <td><a asp-page="/Members/Details" asp-route-id="@loan.MemberId">@loan.Member.FullName</a></td>
+                <td>@loan.CheckoutDate.ToString("d")</td>
+                <td>
+                    @loan.DueDate.ToString("d")
+                    @if (daysUntilDue <= 2 && daysUntilDue >= 0)
+                    {
+                        <span class="badge bg-warning">Due soon</span>
+                    }
+                </td>
+                <td>
+                    <a asp-page="Return" asp-route-id="@loan.Id" class="btn btn-sm btn-success">Return</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

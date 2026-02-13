@@ -1,0 +1,127 @@
+@page
+@model WebApp.Pages.Tools.IndexModel
+@using Domain.Enums
+@{
+    ViewData["Title"] = "Tools";
+}
+
+<h1>Tools</h1>
+
+<p>
+    <a asp-page="Create" class="btn btn-primary">Add New Tool</a>
+</p>
+
+<div class="mb-3">
+    <form method="get" class="row g-2 align-items-end">
+        <div class="col-auto">
+            <label class="form-label small mb-1">Category</label>
+            <select asp-for="CategoryId" class="form-select" asp-items="Model.CategoryList">
+                <option value="">All Categories</option>
+            </select>
+        </div>
+        <div class="col-auto">
+            <label class="form-label small mb-1">Status</label>
+            <select asp-for="StatusFilter" class="form-select" asp-items="Html.GetEnumSelectList<ToolStatus>()">
+                <option value="">All Statuses</option>
+            </select>
+        </div>
+        <div class="col-auto">
+            <label class="form-label small mb-1">Search</label>
+            <input asp-for="SearchFilter" class="form-control" placeholder="Name, description, serial..." />
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">Search</button>
+        </div>
+        <div class="col-auto">
+            <a asp-page="./Index" class="btn btn-outline-secondary">Clear</a>
+        </div>
+    </form>
+</div>
+
+@if (Model.CategoryId.HasValue || Model.StatusFilter.HasValue || !string.IsNullOrWhiteSpace(Model.SearchFilter))
+{
+    <div class="mb-3">
+        <span class="text-muted">Filters active:</span>
+        @if (Model.CategoryId.HasValue)
+        {
+            <span class="badge bg-secondary me-1">Category: @Model.CategoryList.FirstOrDefault(c => c.Value == Model.CategoryId.ToString())?.Text</span>
+        }
+        @if (Model.StatusFilter.HasValue)
+        {
+            <span class="badge bg-secondary me-1">Status: @Model.StatusFilter</span>
+        }
+        @if (!string.IsNullOrWhiteSpace(Model.SearchFilter))
+        {
+            <span class="badge bg-secondary me-1">Search: "@Model.SearchFilter"</span>
+        }
+        <span class="text-muted">(@Model.Tools.Count results)</span>
+    </div>
+}
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Status</th>
+            <th>Loan Period</th>
+            <th>Usage Hours</th>
+            <th>Maintenance</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.Tools)
+        {
+            <tr class="@(item.Status == ToolStatus.OutOfService ? "table-secondary" : item.IsMaintenanceDue ? "table-warning" : "")">
+                <td>
+                    <a asp-page="./Details" asp-route-id="@item.Id">@item.Name</a>
+                    @if (item.RequiredCertification != null)
+                    {
+                        <span class="badge bg-info" title="Requires @item.RequiredCertification.Name">Cert</span>
+                    }
+                </td>
+                <td>@item.Category.Name</td>
+                <td>
+                    @if (item.Status == ToolStatus.Available)
+                    {
+                        <span class="badge bg-success">Available</span>
+                    }
+                    else if (item.Status == ToolStatus.OnLoan)
+                    {
+                        <span class="badge bg-primary">On Loan</span>
+                    }
+                    else if (item.Status == ToolStatus.OutOfService)
+                    {
+                        <span class="badge bg-secondary">Out of Service</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning">Reserved</span>
+                    }
+                </td>
+                <td>@item.LoanPeriodDays days</td>
+                <td>@item.TotalUsageHours hrs</td>
+                <td>
+                    @if (item.IsMaintenanceDue)
+                    {
+                        <span class="badge bg-danger">Due</span>
+                    }
+                    else if (item.MaintenanceIntervalHours.HasValue)
+                    {
+                        var remaining = item.MaintenanceIntervalHours.Value - (item.TotalUsageHours - (item.HoursAtLastService ?? 0));
+                        <span>@remaining.ToString("0.#") hrs left</span>
+                    }
+                    else
+                    {
+                        <span class="text-muted">N/A</span>
+                    }
+                </td>
+                <td>
+                    <a asp-page="./Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Edit</a>
+                    <a asp-page="./Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

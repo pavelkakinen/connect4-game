@@ -1,0 +1,113 @@
+@page
+@model WebApp.Pages.Members.IndexModel
+@using Domain.Enums
+@{
+    ViewData["Title"] = "Members";
+}
+
+<h1>Members</h1>
+
+<p>
+    <a asp-page="Create" class="btn btn-primary">Add New Member</a>
+</p>
+
+<div class="mb-3">
+    <form method="get" class="row g-2 align-items-end">
+        <div class="col-auto">
+            <label class="form-label small mb-1">Status</label>
+            <select asp-for="StatusFilter" class="form-select" asp-items="Html.GetEnumSelectList<MemberStatus>()">
+                <option value="">All Statuses</option>
+            </select>
+        </div>
+        <div class="col-auto">
+            <label class="form-label small mb-1">Search</label>
+            <input asp-for="SearchFilter" class="form-control" placeholder="Name or email..." />
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">Search</button>
+        </div>
+        <div class="col-auto">
+            <a asp-page="./Index" class="btn btn-outline-secondary">Clear</a>
+        </div>
+    </form>
+</div>
+
+@if (Model.StatusFilter.HasValue || !string.IsNullOrWhiteSpace(Model.SearchFilter))
+{
+    <div class="mb-3">
+        <span class="text-muted">Filters active:</span>
+        @if (Model.StatusFilter.HasValue)
+        {
+            <span class="badge bg-secondary me-1">Status: @Model.StatusFilter</span>
+        }
+        @if (!string.IsNullOrWhiteSpace(Model.SearchFilter))
+        {
+            <span class="badge bg-secondary me-1">Search: "@Model.SearchFilter"</span>
+        }
+        <span class="text-muted">(@Model.Members.Count results)</span>
+    </div>
+}
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Status</th>
+            <th>Active Loans</th>
+            <th>Late Returns</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.Members)
+        {
+            var lateCount = item.Loans.Count(l => l.WasLate && l.ReturnDate > DateTime.UtcNow.AddYears(-1));
+            <tr class="@(item.Status == MemberStatus.Suspended ? "table-warning" : "")">
+                <td>
+                    <a asp-page="./Details" asp-route-id="@item.Id">@item.FullName</a>
+                </td>
+                <td>@item.Email</td>
+                <td>@item.Phone</td>
+                <td>
+                    @if (item.Status == MemberStatus.Active)
+                    {
+                        <span class="badge bg-success">Active</span>
+                    }
+                    else if (item.Status == MemberStatus.Suspended)
+                    {
+                        <span class="badge bg-warning">Suspended</span>
+                        @if (item.SuspensionEndDate.HasValue)
+                        {
+                            <br /><small>Until @item.SuspensionEndDate.Value.ToString("d")</small>
+                        }
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">Expired</span>
+                    }
+                </td>
+                <td>@item.Loans.Count(l => l.ReturnDate == null)</td>
+                <td>
+                    @if (lateCount >= 3)
+                    {
+                        <span class="badge bg-danger">@lateCount</span>
+                    }
+                    else if (lateCount > 0)
+                    {
+                        <span class="badge bg-warning">@lateCount</span>
+                    }
+                    else
+                    {
+                        <span>0</span>
+                    }
+                </td>
+                <td>
+                    <a asp-page="./Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Edit</a>
+                    <a asp-page="./Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

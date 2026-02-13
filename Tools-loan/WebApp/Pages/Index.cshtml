@@ -1,0 +1,158 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<h1>Community Tool Lending Library</h1>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title">Total Tools</h5>
+                <h2>@Model.TotalTools</h2>
+                <small>@Model.AvailableTools available</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title">Active Members</h5>
+                <h2>@Model.ActiveMembers</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <h5 class="card-title">Tools On Loan</h5>
+                <h2>@Model.OnLoan</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white @(Model.OverdueCount > 0 ? "bg-danger" : "bg-secondary")">
+            <div class="card-body">
+                <h5 class="card-title">Overdue</h5>
+                <h2>@Model.OverdueCount</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        @if (Model.OverdueLoans.Any())
+        {
+            <div class="card border-danger mb-3">
+                <div class="card-header bg-danger text-white">Overdue Items</div>
+                <ul class="list-group list-group-flush">
+                    @foreach (var loan in Model.OverdueLoans)
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>@loan.Tool.Name</strong><br />
+                                <small>@loan.Member.FullName - Due @loan.DueDate.ToString("d")</small>
+                            </div>
+                            <a asp-page="/Loans/Return" asp-route-id="@loan.Id" class="btn btn-sm btn-warning">Return</a>
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
+
+        @if (Model.MaintenanceDue.Any())
+        {
+            <div class="card border-warning mb-3">
+                <div class="card-header bg-warning">Maintenance Due</div>
+                <ul class="list-group list-group-flush">
+                    @foreach (var tool in Model.MaintenanceDue)
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>@tool.Name</strong><br />
+                                <small>@tool.TotalUsageHours hrs total usage</small>
+                            </div>
+                            <a asp-page="/Tools/Edit" asp-route-id="@tool.Id" class="btn btn-sm btn-outline-secondary">Update</a>
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
+
+        @if (Model.OutOfService.Any())
+        {
+            <div class="card border-secondary mb-3">
+                <div class="card-header bg-secondary text-white">Out of Service (@Model.OutOfService.Count)</div>
+                <ul class="list-group list-group-flush">
+                    @foreach (var tool in Model.OutOfService.Take(5))
+                    {
+                        <li class="list-group-item">
+                            <strong>@tool.Name</strong>
+                            <br /><small class="text-muted">@tool.OutOfServiceReason</small>
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
+    </div>
+
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-header">Recent Checkouts</div>
+            <ul class="list-group list-group-flush">
+                @foreach (var loan in Model.RecentCheckouts)
+                {
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between">
+                            <span>@loan.Tool.Name</span>
+                            <small class="text-muted">@loan.CheckoutDate.ToString("d")</small>
+                        </div>
+                        <small class="text-muted">@loan.Member.FullName - Due @loan.DueDate.ToString("d")</small>
+                    </li>
+                }
+                @if (!Model.RecentCheckouts.Any())
+                {
+                    <li class="list-group-item text-muted">No recent checkouts</li>
+                }
+            </ul>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">Recent Returns</div>
+            <ul class="list-group list-group-flush">
+                @foreach (var loan in Model.RecentReturns)
+                {
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between">
+                            <span>@loan.Tool.Name</span>
+                            <small class="text-muted">@loan.ReturnDate?.ToString("d")</small>
+                        </div>
+                        <small class="text-muted">
+                            @loan.Member.FullName
+                            @if (loan.WasLate)
+                            {
+                                <span class="badge bg-warning">Late</span>
+                            }
+                        </small>
+                    </li>
+                }
+                @if (!Model.RecentReturns.Any())
+                {
+                    <li class="list-group-item text-muted">No recent returns</li>
+                }
+            </ul>
+        </div>
+
+        <div class="card">
+            <div class="card-header">Quick Actions</div>
+            <div class="card-body">
+                <a asp-page="/Loans/Checkout" class="btn btn-primary me-2">New Checkout</a>
+                <a asp-page="/Tools/Create" class="btn btn-outline-primary me-2">Add Tool</a>
+                <a asp-page="/Members/Create" class="btn btn-outline-primary">Add Member</a>
+            </div>
+        </div>
+    </div>
+</div>

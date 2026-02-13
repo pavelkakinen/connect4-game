@@ -1,0 +1,519 @@
+================================================================================
+                        CONNECTX - REFACTORING PLAN
+================================================================================
+
+This document lists every method that should be refactored, why, and how.
+Goal: each method does ONE task, methods are short, code is clear.
+
+
+================================================================================
+1. GameController.cs  -  GameLoop() (line 43, ~110 lines)
+================================================================================
+
+PROBLEM:
+  - Does 5 different things in one method:
+    1) checks if game is already over
+    2) decides whose turn it is (human or AI)
+    3) processes the move
+    4) checks for win
+    5) checks for draw
+  - Hard to read, hard to test.
+
+REFACTORING:
+  Extract into small methods:
+
+  a) ExtractMethod: ShowFinishedGame()
+     Lines 47-73. Shows the board when game is already over.
+     Move the "if currentWinner != Empty || BoardIsFull" block here.
+
+  b) ExtractMethod: GetNextMove() -> int
+     Lines 75-102. Decides if AI or human plays and returns column.
+     Returns the column choice (or -1 for pause).
+
+  c) ExtractMethod: HandleMoveResult(result, columnChoice, isAIMove)
+     Lines 104-121. Processes the result of a move: shows error if
+     column full, shows AI move with delay.
+
+  d) ExtractMethod: HandleWin(winner) -> string
+     Lines 123-138. Draws winning board, prints result, saves game.
+
+  e) ExtractMethod: HandleDraw() -> string
+     Lines 140-152. Draws board, prints draw message, saves game.
+
+  RESULT GameLoop():
+     while (true)
+     {
+         if (IsGameAlreadyOver()) return ShowFinishedGame();
+         var (column, isAI) = GetNextMove();
+         if (column == -1) { handle pause; continue; }
+         var result = GameBrain.ProcessMove(column);
+         if (!result.success) { show error; continue; }
+         if (isAI) ShowAIMove(column);
+         if (CheckAndHandleWin(result.row, column)) return "m";
+         if (CheckAndHandleDraw()) return "m";
+     }
+
+
+================================================================================
+2. GameController.cs  -  LoadGame() (line 256, ~44 lines)
+================================================================================
+
+PROBLEM:
+  - Does 3 things: loads state, reinitializes AI, shows UI message.
+  - UI display mixed with data loading.
+
+REFACTORING:
+  a) ExtractMethod: InitializeAIFromConfig(GameConfiguration config)
+     Lines 269-275. Creates AI players based on config. This same code
+     also appears in the constructor (lines 32-40) - DUPLICATE.
+
+  b) Keep LoadGame() for data loading only, move console output to
+     a separate ShowLoadedGameMessage(GameState) method.
+
+
+================================================================================
+3. GamePlay.cshtml.cs  -  OnGet() (line 33, ~87 lines)
+================================================================================
+
+PROBLEM:
+  - This is the WORST method in the project.
+  - Handles 3 completely different scenarios in one method:
+    1) Load existing game from ID
+    2) Create brand new game
+    3) Redirect if no params
+  - Also processes moves and AI within the same flow.
+  - 11 parameters!
+
+REFACTORING:
+  a) ExtractMethod: LoadExistingGame(string gameId, int? col, bool pause)
+     Lines 48-87. Loads saved state, creates GameBrain, processes move.
+
+  b) ExtractMethod: CreateNewGame(int width, int height, int winCond,
+     int boardType, string p1Name, string p2Name, int p1Type, int p2Type)
+     Lines 90-117. Creates config, GameBrain, saves initial state.
+
+  c) ExtractMethod: BuildConfigFromState(GameState state) -> GameConfiguration
+     Lines 54-63. Creates GameConfiguration from saved state.
+     This same code also exists in Index.cshtml.cs (line 65-71)
+     and SavedGamesMenu.cs (line 32-38) - TRIPLICATE!
+
+  RESULT OnGet():
+     if (gameId exists) return LoadExistingGame(gameId, col, pause);
+     if (has config params) return CreateNewGame(...);
+     return RedirectToPage("./NewGame");
+
+
+================================================================================
+4. GamePlay.cshtml.cs  -  CheckForWinner() (line 122, ~23 lines)
+================================================================================
+
+PROBLEM:
+  - Manually loops all cells to find a winner.
+  - GameBrain ALREADY has CheckWin() that does the same thing (line 146).
+  - Duplicate logic.
+
+REFACTORING:
+  Replace entire method body with:
+     var result = GameBrain.CheckWin();
+     if (result.winner != ECellState.Empty)
+     {
+         Winner = result.winner;
+         WinningCells = result.winningCells;
+     }
+
+
+================================================================================
+5. GamePlay.cshtml.cs  -  SaveGameState() (line 234, ~12 lines)
+================================================================================
+
+PROBLEM:
+  - Contains Console.WriteLine debug statements (lines 241, 245).
+
+REFACTORING:
+  - Remove Console.WriteLine debug lines.
+
+
+================================================================================
+6. GamePlay.cshtml.cs  -  OnGetCheckUpdate() (line 248, ~21 lines)
+================================================================================
+
+PROBLEM:
+  - Contains Console.WriteLine debug statement (line 256).
+
+REFACTORING:
+  - Remove Console.WriteLine debug line.
+
+
+================================================================================
+7. Index.cshtml.cs  -  CheckIfGameFinished() (line 62, ~35 lines)
+================================================================================
+
+PROBLEM:
+  - Creates entire GameBrain just to check if game is over.
+  - Manually loops all cells to find winner - SAME code as
+    GamePlay.CheckForWinner() and GameBrain.CheckWin().
+  - Triplicate logic.
+
+REFACTORING:
+  a) Add method to GameBrain: IsGameFinished() -> bool
+     Combines CheckWin() and BoardIsFull() into one call.
+
+  b) Replace CheckIfGameFinished() with:
+     var config = BuildConfigFromState(gameState);  // shared helper
+     var brain = new GameBrain(config, gameState.Player1Name, gameState.Player2Name);
+     brain.LoadFromGameState(gameState);
+     return brain.IsGameFinished();
+
+  NOTE: BuildConfigFromState() should be extracted to a shared location
+  (see item 14 below).
+
+
+================================================================================
+8. NewGame.cshtml.cs  -  OnPost() (line 50, ~57 lines)
+================================================================================
+
+PROBLEM:
+  - Huge switch statement (lines 60-92) duplicates the exact same
+    configuration data that exists in LoadConfigurations() (line 37-48).
+  - If you add a new config, you must change BOTH places.
+
+REFACTORING:
+  a) Create a Dictionary or List that maps ConfigId -> (width, height,
+     winCond, boardType). Use this in BOTH LoadConfigurations and OnPost.
+
+  b) ExtractField: private static readonly dictionary of configurations.
+
+  RESULT OnPost():
+     if (!ModelState.IsValid) { ... }
+     var cfg = Configurations[ConfigId];
+     return RedirectToPage("./GamePlay", new { cfg.Width, cfg.Height, ... });
+
+
+================================================================================
+9. Menu.cs  -  Run() (line 44, ~67 lines)
+================================================================================
+
+PROBLEM:
+  - Mixes 3 concerns: display, input handling, return value processing.
+  - Nested if/else chain for return values (lines 83-108) is confusing.
+  - Russian comment on line 86.
+
+REFACTORING:
+  a) ExtractMethod: HandleKeyInput(keyInfo, option) -> (newOption, selectedKey)
+     Lines 60-71. Handles arrow keys and enter.
+
+  b) ExtractMethod: ProcessMenuSelection(userChoice) -> (menuRunning, finalChoice)
+     Lines 73-108. Handles x/m/b keys and method invocation results.
+
+  c) Remove Russian comment (line 86).
+
+  RESULT Run():
+     do {
+         DisplayMenu(menuItemsList, option);
+         var keyInfo = Console.ReadKey(true);
+         (option, userChoice) = HandleKeyInput(keyInfo, option);
+         if (userChoice != "")
+             (menuRunning, userChoice) = ProcessMenuSelection(userChoice);
+     } while (menuRunning);
+
+
+================================================================================
+10. AIHelper.cs  -  CheckWin() (line 134, ~51 lines)
+================================================================================
+
+PROBLEM:
+  - 4 direction checks with similar patterns (horizontal, vertical,
+    diagonal-right, diagonal-left).
+  - Extra cylinder wrapping logic for horizontal makes method long.
+  - Duplicates logic from GameBrain.CheckWin().
+
+REFACTORING:
+  a) ExtractMethod: CountInDirection(board, row, col, dRow, dCol, color) -> int
+     Counts consecutive pieces in one direction. Reuse for all 4 directions.
+
+  b) ExtractMethod: CountHorizontalCylinder(board, row, col, color, config) -> int
+     Handles the special cylinder wrapping case.
+
+  c) Main CheckWin becomes:
+     Check 4 directions using CountInDirection.
+     If cylinder, also check CountHorizontalCylinder.
+
+  d) LONG TERM: Consolidate with GameBrain.CheckWin so there is ONE
+     win-checking implementation used by both AI and game logic.
+
+
+================================================================================
+11. MinimaxAI.cs  -  Minimax() (line 58, ~56 lines)
+================================================================================
+
+PROBLEM:
+  - Two nearly identical branches (maximizing lines 69-89 vs
+    minimizing lines 91-113). Code is duplicated.
+
+REFACTORING:
+  a) ExtractMethod: EvaluateBranch(board, depth, alpha, beta,
+     isMaximizing, aiColor, config) that handles one branch.
+     OR simplify by using a common loop with Math.Max/Math.Min logic.
+
+  b) Alternative: Negamax variant (standard simplification of minimax
+     that eliminates the if/else duplication).
+
+
+================================================================================
+12. MinimaxAI.cs  -  GetBestMove() (line 17, ~36 lines)
+================================================================================
+
+PROBLEM:
+  - Does 3 things: check immediate win, check block, run minimax.
+  - Not terrible, but the minimax loop (lines 32-50) could be cleaner.
+
+REFACTORING:
+  a) ExtractMethod: FindBestMinimaxMove(board, aiColor, config) -> int
+     Lines 32-50. Runs minimax on all available columns.
+
+  RESULT GetBestMove():
+     var win = AIHelper.FindWinningMove(...);
+     if (win.HasValue) return win.Value;
+     var block = AIHelper.FindBlockingMove(...);
+     if (block.HasValue) return block.Value;
+     return FindBestMinimaxMove(board, aiColor, config);
+
+
+================================================================================
+13. GameBrain.cs  -  GetSellsInDirection() (line 102)
+================================================================================
+
+PROBLEM:
+  - Typo in method name: "Sells" should be "Cells".
+  - Has unused variable "count" (line 106) - cells.Count already tracks this.
+
+REFACTORING:
+  a) Rename to GetCellsInDirection().
+  b) Remove unused "count" variable.
+
+
+================================================================================
+14. DUPLICATE: GameConfiguration creation from GameState
+================================================================================
+
+PROBLEM:
+  The following code block is copy-pasted in 3 places:
+    var config = new GameConfiguration
+    {
+        BoardWidth = gameState.BoardWidth,
+        BoardHeight = gameState.BoardHeight,
+        WinCondition = gameState.WinCond,
+        BoardType = gameState.BoardType
+    };
+
+  Locations:
+    - GamePlay.cshtml.cs OnGet() line 54-60
+    - Index.cshtml.cs CheckIfGameFinished() line 65-71
+    - SavedGamesMenu.cs ShowLoadMenu() line 32-38
+
+REFACTORING:
+  Add factory method to GameConfiguration:
+     public static GameConfiguration FromGameState(GameState state)
+     {
+         return new GameConfiguration
+         {
+             BoardWidth = state.BoardWidth,
+             BoardHeight = state.BoardHeight,
+             WinCondition = state.WinCond,
+             BoardType = state.BoardType
+         };
+     }
+
+  Replace all 3 occurrences with: GameConfiguration.FromGameState(state);
+
+
+================================================================================
+15. DUPLICATE: AI initialization code
+================================================================================
+
+PROBLEM:
+  The AI initialization pattern is duplicated in 3 places:
+    if (config.P1Type == EPlayerType.Computer)
+        _aiPlayer1 = new MinimaxAI(maxDepth: 6);
+    if (config.P2Type == EPlayerType.Computer)
+        _aiPlayer2 = new MinimaxAI(maxDepth: 6);
+
+  Locations:
+    - GameController constructor (lines 32-40)
+    - GameController.LoadGame() (lines 269-275)
+    - GamePlay.cshtml.cs InitializeAI() (lines 170-181)
+
+REFACTORING:
+  a) In GameController: extract private InitializeAI() method,
+     call it from constructor and LoadGame().
+  b) Magic number 6 should be a constant: private const int AI_DEPTH = 6;
+
+
+================================================================================
+16. DUPLICATE: SaveCompletedGame and SaveGame in GameController
+================================================================================
+
+PROBLEM:
+  - SaveCompletedGame() (line 156) and SaveGame() (line 215) share
+    the same logic for setting GameId and calling repository.Save().
+  - Only difference: SaveCompletedGame has try-catch, SaveGame updates
+    _currentGameId and shows different message.
+
+REFACTORING:
+  Merge into one method:
+     private string SaveCurrentGame(bool isCompleted)
+     Call repository.Save(), handle gameId, show appropriate message.
+
+
+================================================================================
+17. SavedGamesMenu.cs  -  ShowLoadMenu/ShowDeleteMenu/ShowEditMenu
+================================================================================
+
+PROBLEM:
+  - All 3 methods follow the EXACT same pattern:
+    1) Get saved games list
+    2) Check if empty -> show message
+    3) Create menu with title
+    4) Loop through games, add menu items
+    5) Run menu
+  - Only difference: menu title and the lambda action.
+
+REFACTORING:
+  ExtractMethod: ShowGameMenu(repository, title, actionPerGame) -> string
+  Takes the menu title and a Func for what to do when a game is selected.
+
+  RESULT:
+     ShowLoadMenu  -> ShowGameMenu(repo, "SELECT SAVED GAME", game => { load logic })
+     ShowDeleteMenu -> ShowGameMenu(repo, "SELECT GAME TO DELETE", game => { delete logic })
+     ShowEditMenu  -> ShowGameMenu(repo, "SELECT GAME TO EDIT", game => { edit logic })
+
+
+================================================================================
+18. ConsoleApp/Program.cs  -  Menu handler lambdas (lines 41-91)
+================================================================================
+
+PROBLEM:
+  - Three menu handler lambdas (Load, Delete, Edit) have identical pattern:
+      var result = SavedGamesMenu.ShowXMenu(gameRepository);
+      if (string.IsNullOrEmpty(result)) return "m";
+      return result;
+
+REFACTORING:
+  ExtractMethod: RunSavedGamesAction(Func<string> action) -> string
+     var result = action();
+     return string.IsNullOrEmpty(result) ? "m" : result;
+
+
+================================================================================
+19. ConsoleApp/Program.cs  -  Config menu lambdas (lines 96-119)
+================================================================================
+
+PROBLEM:
+  - Four config menu items have identical pattern:
+      config = GameConfiguration.XXX();
+      var result = menuChoosePlayer.Run();
+      return result;
+
+REFACTORING:
+  ExtractMethod: SelectConfig(GameConfiguration newConfig) -> string
+     config = newConfig;
+     return menuChoosePlayer.Run();
+
+  Usage: menuChooseConfig.AddMenuItem("1", "Classic", () => SelectConfig(GameConfiguration.Classic()));
+
+
+================================================================================
+20. GameRepositoryJson.cs  -  Save() (line 45)
+================================================================================
+
+PROBLEM:
+  - Contains Console.WriteLine debug statement (line 52).
+
+REFACTORING:
+  - Remove: Console.WriteLine($" JSON SAVE: {data.GameId}...");
+
+
+================================================================================
+21. GameRepositoryJson.cs  -  ListAsync() (line 40)
+================================================================================
+
+PROBLEM:
+  - Not actually async. Just calls synchronous List().
+
+REFACTORING:
+  - Use Task.Run(() => List()) or make it properly async with
+    async file I/O operations.
+
+
+================================================================================
+22. Ui.cs  -  PrintGameResult() (line 57, ~22 lines)
+================================================================================
+
+PROBLEM:
+  - Three similar if/else-if branches for Empty, Red, Blue.
+  - ReadKey() inside a display method (side effect).
+
+REFACTORING:
+  a) Use switch expression for message text.
+  b) Move Console.ReadKey() out to the caller.
+
+  RESULT:
+     var (emoji, label) = winner switch {
+         ECellState.Red => ("🔴", winnerName + " WINS"),
+         ECellState.Blue => ("🔵", winnerName + " WINS"),
+         _ => ("", "DRAW GAME")
+     };
+     Console.WriteLine($"    {label} {emoji}");
+
+
+================================================================================
+23. GameBrain.cs  -  GetGameState() + LoadFromGameState()
+================================================================================
+
+PROBLEM:
+  - GetGameState() sets GameId = "" (line 174) - caller must fix it.
+  - ConvertBoardToList() (line 189) and LoadFromGameState() (line 206)
+    are inverse operations but not symmetric in naming.
+
+REFACTORING:
+  a) Accept optional gameId parameter: GetGameState(string? gameId = null)
+  b) Rename ConvertBoardToList() -> SerializeBoard()
+  c) Extract inverse: DeserializeBoard(List<List<int>> board) used in
+     LoadFromGameState().
+
+
+================================================================================
+                          SUMMARY - PRIORITY ORDER
+================================================================================
+
+HIGH PRIORITY (biggest improvement, most duplicated):
+  1.  #3  - GamePlay.OnGet() - split into LoadExistingGame / CreateNewGame
+  2.  #1  - GameController.GameLoop() - extract 5 methods
+  3.  #14 - GameConfiguration.FromGameState() factory - remove triplication
+  4.  #4  - GamePlay.CheckForWinner() - use GameBrain.CheckWin()
+  5.  #7  - Index.CheckIfGameFinished() - use GameBrain.IsGameFinished()
+  6.  #8  - NewGame.OnPost() - remove duplicate config data
+
+MEDIUM PRIORITY (cleaner code):
+  7.  #17 - SavedGamesMenu - extract common ShowGameMenu()
+  8.  #9  - Menu.Run() - extract input handling
+  9.  #15 - AI initialization - remove duplication, add constant
+  10. #10 - AIHelper.CheckWin() - extract CountInDirection()
+  11. #16 - GameController save methods - merge duplicates
+  12. #12 - MinimaxAI.GetBestMove() - extract minimax loop
+
+LOW PRIORITY (small fixes):
+  13. #13 - Fix typo: GetSellsInDirection -> GetCellsInDirection
+  14. #5  - Remove debug Console.WriteLine in GamePlay
+  15. #6  - Remove debug Console.WriteLine in OnGetCheckUpdate
+  16. #20 - Remove debug Console.WriteLine in GameRepositoryJson
+  17. #18 - Program.cs - extract RunSavedGamesAction()
+  18. #19 - Program.cs - extract SelectConfig()
+  19. #22 - Ui.PrintGameResult() - simplify with switch
+  20. #23 - GameBrain serialization naming
+  21. #21 - Make ListAsync actually async
+  22. #11 - MinimaxAI.Minimax() - reduce duplication in branches
+
+================================================================================
+                         TOTAL METHODS TO REFACTOR: 22
+================================================================================

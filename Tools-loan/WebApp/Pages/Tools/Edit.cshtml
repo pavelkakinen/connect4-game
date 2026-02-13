@@ -1,0 +1,100 @@
+@page "{id:int}"
+@model WebApp.Pages.Tools.EditModel
+@using Domain.Enums
+@{
+    ViewData["Title"] = "Edit Tool";
+}
+
+<h1>Edit Tool</h1>
+
+<div class="row">
+    <div class="col-md-8">
+        <form method="post">
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <input type="hidden" asp-for="Tool.Id" />
+
+            <div class="row mb-3">
+                <div class="col-md-8">
+                    <label asp-for="Tool.Name" class="form-label"></label>
+                    <input asp-for="Tool.Name" class="form-control" required />
+                    <span asp-validation-for="Tool.Name" class="text-danger"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Tool.SerialNumber" class="form-label"></label>
+                    <input asp-for="Tool.SerialNumber" class="form-control" />
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Tool.Description" class="form-label"></label>
+                <textarea asp-for="Tool.Description" class="form-control" rows="2"></textarea>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label asp-for="Tool.CategoryId" class="form-label">Category</label>
+                    <select asp-for="Tool.CategoryId" class="form-select" asp-items="Model.CategoryList"></select>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Tool.RequiredCertificationId" class="form-label">Required Certification</label>
+                    <select asp-for="Tool.RequiredCertificationId" class="form-select" asp-items="Model.CertificationList">
+                        <option value="">None</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label asp-for="Tool.LoanPeriodDays" class="form-label"></label>
+                    <input asp-for="Tool.LoanPeriodDays" class="form-control" type="number" min="1" max="365" />
+                    <span asp-validation-for="Tool.LoanPeriodDays" class="text-danger"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Tool.ReplacementCost" class="form-label"></label>
+                    <input asp-for="Tool.ReplacementCost" class="form-control" type="number" step="0.01" min="0" />
+                    <span asp-validation-for="Tool.ReplacementCost" class="text-danger"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Tool.PurchaseDate" class="form-label"></label>
+                    <input asp-for="Tool.PurchaseDate" class="form-control" type="date" />
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label asp-for="Tool.MaintenanceIntervalHours" class="form-label">Maintenance Interval (hours)</label>
+                    <input asp-for="Tool.MaintenanceIntervalHours" class="form-control" type="number" step="0.1" min="0" />
+                    <span asp-validation-for="Tool.MaintenanceIntervalHours" class="text-danger"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Tool.TotalUsageHours" class="form-label"></label>
+                    <input asp-for="Tool.TotalUsageHours" class="form-control" type="number" step="0.1" min="0" />
+                    <span asp-validation-for="Tool.TotalUsageHours" class="text-danger"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Tool.HoursAtLastService" class="form-label"></label>
+                    <input asp-for="Tool.HoursAtLastService" class="form-control" type="number" step="0.1" min="0" />
+                    <span asp-validation-for="Tool.HoursAtLastService" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label asp-for="Tool.Status" class="form-label"></label>
+                    <select asp-for="Tool.Status" class="form-select" asp-items="Html.GetEnumSelectList<ToolStatus>()"></select>
+                </div>
+                <div class="col-md-8">
+                    <label asp-for="Tool.OutOfServiceReason" class="form-label">Out of Service Reason</label>
+                    <input asp-for="Tool.OutOfServiceReason" class="form-control" />
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Save</button>
+            <a asp-page="Index" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

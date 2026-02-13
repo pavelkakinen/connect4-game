@@ -1,0 +1,158 @@
+@page "{id:int}"
+@model WebApp.Pages.Tools.DetailsModel
+@using Domain.Enums
+@{
+    ViewData["Title"] = Model.Tool.Name;
+}
+
+<h1>@Model.Tool.Name</h1>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-header">Tool Information</div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Category</dt>
+                    <dd class="col-sm-8">@Model.Tool.Category.Name</dd>
+
+                    <dt class="col-sm-4">Serial Number</dt>
+                    <dd class="col-sm-8">@(Model.Tool.SerialNumber ?? "N/A")</dd>
+
+                    <dt class="col-sm-4">Status</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.Tool.Status == ToolStatus.Available)
+                        {
+                            <span class="badge bg-success">Available</span>
+                        }
+                        else if (Model.Tool.Status == ToolStatus.OnLoan)
+                        {
+                            <span class="badge bg-primary">On Loan</span>
+                        }
+                        else if (Model.Tool.Status == ToolStatus.OutOfService)
+                        {
+                            <span class="badge bg-secondary">Out of Service</span>
+                            @if (!string.IsNullOrEmpty(Model.Tool.OutOfServiceReason))
+                            {
+                                <br /><small class="text-muted">@Model.Tool.OutOfServiceReason</small>
+                            }
+                        }
+                        else
+                        {
+                            <span class="badge bg-warning">Reserved</span>
+                        }
+                    </dd>
+
+                    <dt class="col-sm-4">Loan Period</dt>
+                    <dd class="col-sm-8">@Model.Tool.LoanPeriodDays days</dd>
+
+                    <dt class="col-sm-4">Replacement Cost</dt>
+                    <dd class="col-sm-8">@(Model.Tool.ReplacementCost?.ToString("C") ?? "N/A")</dd>
+
+                    @if (Model.Tool.RequiredCertification != null)
+                    {
+                        <dt class="col-sm-4">Required Certification</dt>
+                        <dd class="col-sm-8">@Model.Tool.RequiredCertification.Name</dd>
+                    }
+                </dl>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">Maintenance</div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Total Usage</dt>
+                    <dd class="col-sm-8">@Model.Tool.TotalUsageHours hours</dd>
+
+                    @if (Model.Tool.MaintenanceIntervalHours.HasValue)
+                    {
+                        <dt class="col-sm-4">Service Interval</dt>
+                        <dd class="col-sm-8">Every @Model.Tool.MaintenanceIntervalHours hours</dd>
+
+                        <dt class="col-sm-4">Hours Since Service</dt>
+                        <dd class="col-sm-8">@((Model.Tool.TotalUsageHours - (Model.Tool.HoursAtLastService ?? 0)).ToString("0.#")) hours</dd>
+
+                        <dt class="col-sm-4">Maintenance Status</dt>
+                        <dd class="col-sm-8">
+                            @if (Model.Tool.IsMaintenanceDue)
+                            {
+                                <span class="badge bg-danger">Maintenance Due</span>
+                            }
+                            else
+                            {
+                                var remaining = Model.Tool.MaintenanceIntervalHours.Value - (Model.Tool.TotalUsageHours - (Model.Tool.HoursAtLastService ?? 0));
+                                <span class="text-success">@remaining.ToString("0.#") hours until service</span>
+                            }
+                        </dd>
+                    }
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-header">Current Status</div>
+            <div class="card-body">
+                @if (Model.CurrentLoan != null)
+                {
+                    <p><strong>Currently with:</strong> @Model.CurrentLoan.Member.FullName</p>
+                    <p><strong>Checked out:</strong> @Model.CurrentLoan.CheckoutDate.ToString("d")</p>
+                    <p><strong>Due:</strong> @Model.CurrentLoan.DueDate.ToString("d")
+                        @if (Model.CurrentLoan.IsOverdue)
+                        {
+                            <span class="badge bg-danger">OVERDUE</span>
+                        }
+                    </p>
+                }
+                else if (Model.Tool.Status == ToolStatus.Available)
+                {
+                    <p class="text-success">Available for checkout</p>
+                    <a asp-page="/Loans/Checkout" asp-route-toolId="@Model.Tool.Id" class="btn btn-success">Check Out</a>
+                }
+                else if (Model.Tool.Status == ToolStatus.OutOfService)
+                {
+                    <p class="text-muted">This tool is currently out of service</p>
+                }
+
+                @if (Model.WaitingCount > 0)
+                {
+                    <p class="mt-2"><strong>@Model.WaitingCount</strong> member(s) waiting for this tool</p>
+                }
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">Loan History</div>
+            <ul class="list-group list-group-flush">
+                @foreach (var loan in Model.RecentLoans)
+                {
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between">
+                            <span>@loan.Member.FullName</span>
+                            <small class="text-muted">@loan.CheckoutDate.ToString("d") - @(loan.ReturnDate?.ToString("d") ?? "current")</small>
+                        </div>
+                        @if (loan.ReturnCondition.HasValue)
+                        {
+                            <small class="text-muted">Returned: @loan.ReturnCondition</small>
+                        }
+                        @if (loan.WasLate)
+                        {
+                            <span class="badge bg-warning">Late</span>
+                        }
+                    </li>
+                }
+                @if (!Model.RecentLoans.Any())
+                {
+                    <li class="list-group-item text-muted">No loan history</li>
+                }
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="mt-3">
+    <a asp-page="./Edit" asp-route-id="@Model.Tool.Id" class="btn btn-primary">Edit</a>
+    <a asp-page="./Index" class="btn btn-secondary">Back to List</a>
+</div>

@@ -1,0 +1,72 @@
+@page "{id:int}"
+@model WebApp.Pages.Loans.ReturnModel
+@using Domain.Enums
+@{
+    ViewData["Title"] = "Return Tool";
+}
+
+<h1>Return Tool</h1>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-header">Loan Details</div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Tool</dt>
+                    <dd class="col-sm-8">@Model.Loan.Tool.Name</dd>
+
+                    <dt class="col-sm-4">Member</dt>
+                    <dd class="col-sm-8">@Model.Loan.Member.FullName</dd>
+
+                    <dt class="col-sm-4">Checked Out</dt>
+                    <dd class="col-sm-8">@Model.Loan.CheckoutDate.ToString("d")</dd>
+
+                    <dt class="col-sm-4">Due Date</dt>
+                    <dd class="col-sm-8">
+                        @Model.Loan.DueDate.ToString("d")
+                        @if (Model.Loan.IsOverdue)
+                        {
+                            <span class="badge bg-danger">OVERDUE by @((DateTime.UtcNow - Model.Loan.DueDate).Days) days</span>
+                        }
+                    </dd>
+                </dl>
+            </div>
+        </div>
+
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="mb-3">
+                <label asp-for="ReturnCondition" class="form-label">Return Condition</label>
+                <select asp-for="ReturnCondition" class="form-select" asp-items="Html.GetEnumSelectList<LoanCondition>()"></select>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="UsageHours" class="form-label">Usage Hours (optional)</label>
+                <input asp-for="UsageHours" class="form-control" type="number" step="0.1" />
+                <div class="form-text">Enter estimated hours the tool was used</div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Notes" class="form-label">Notes</label>
+                <textarea asp-for="Notes" class="form-control" rows="2">@Model.Loan.Notes</textarea>
+            </div>
+
+            @if (Model.ReturnCondition == LoanCondition.Damaged)
+            {
+                <div class="mb-3">
+                    <label asp-for="DamageDescription" class="form-label">Damage Description</label>
+                    <textarea asp-for="DamageDescription" class="form-control" rows="2"></textarea>
+                </div>
+            }
+
+            <button type="submit" class="btn btn-success">Complete Return</button>
+            <a asp-page="Index" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
